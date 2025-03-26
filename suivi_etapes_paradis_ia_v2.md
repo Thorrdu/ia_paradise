@@ -27,8 +27,7 @@ Cette étape préliminaire est **essentielle** pour s'assurer que votre système
 
 Structuration optimale des dossiers pour une expérience utilisateur fluide.
 
-- [ ] Créer le répertoire principal `V2`
-- [ ] Créer les sous-répertoires :
+- [ ] Créer les répertoires principaux :
   - [ ] `modeles` : stockage des modèles IA et configurations
   - [ ] `agents` : définitions et outils des agents autonomes
   - [ ] `config` : fichiers de configuration du système
