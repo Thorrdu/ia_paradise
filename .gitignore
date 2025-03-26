@@ -1,0 +1,25 @@
+# Fichiers temporaires
+*.tmp
+*.log
+*.bak
+
+# Dossiers sensibles qui ne doivent pas être partagés
+config/api_keys.json
+config/credentials.json
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Dossiers d'environnement virtuel Python
+venv/
+env/
+.env/
+
+# Dossiers de cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Dossiers de modèles large (ils seront téléchargés par l'utilisateur)
+modeles/downloaded/ 
