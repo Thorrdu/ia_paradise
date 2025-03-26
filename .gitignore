@@ -1,25 +1,98 @@
-# Fichiers temporaires
-*.tmp
-*.log
-*.bak
-
-# Dossiers sensibles qui ne doivent pas être partagés
-config/api_keys.json
-config/credentials.json
-
-# Fichiers système
-.DS_Store
-Thumbs.db
-
-# Dossiers d'environnement virtuel Python
-venv/
-env/
-.env/
-
-# Dossiers de cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Dossiers de modèles large (ils seront téléchargés par l'utilisateur)
-modeles/downloaded/ 
+# Environnements virtuels
+crew_env/
+web_env/
+venv/
+env/
+ENV/
+
+# Logs et bases de données
+*.log
+*.sqlite
+*.db
+
+# Modèles et données volumineuses
+modeles/downloaded/
+*.bin
+*.onnx
+*.pt
+*.pth
+*.safetensors
+
+# Rapports de performance
+rapport_performance.txt
+
+# Fichiers de configuration personnels
+.env
+config/local_*
+
+# Fichiers de cache Ollama
+.ollama/
+
+# Fichiers de cache IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.pytest_cache/
+
+# Fichiers de compilation Windows
+*.exe
+*.dll
+*.pyd
+
+# Fichiers de session Docker
+.docker/
+
+# Fichiers de compilation et exécutables
+*.o
+*.obj
+*.out
+
+# Fichiers temporaires
+tmp/
+temp/
+
+# Secrets et tokens
+*.key
+*.pem
+*.crt
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Fichiers spécifiques au projet Paradis IA
+rustup-init.exe
+lancer_paradis_ia_new.ps1
+test_cuda.py
+run_script.bat
+*_backup.*
+*.bak
+
+# Dossiers et fichiers générés spécifiques au projet
+.ollama/
+OpenDevin/ 
