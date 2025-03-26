@@ -1,0 +1,9 @@
+crewai
+langchain
+psutil
+torch
+langchain-community
+langchain-ollama
+requests
+aiohttp
+websockets 

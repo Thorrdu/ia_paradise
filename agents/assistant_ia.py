@@ -6,6 +6,9 @@ import os
 import json
 import psutil
 import torch
+import requests
+import socket
+import argparse
 
 # Configuration de l'agent avec accélération GPU
 ollama_llm = Ollama(
@@ -55,6 +58,63 @@ class FileTool(BaseTool):
     def _arun(self, action, path, content=None):
         return self._run(action, path, content)
 
+# Outil pour la navigation web
+class WebBrowserTool(BaseTool):
+    name = "web_browser_tool"
+    description = "Navigue sur le web et récupère des informations"
+    
+    def _run(self, url, action="get"):
+        try:
+            if action == "get":
+                response = requests.get(url, timeout=10)
+                return response.text
+            else:
+                return f"Action {action} non supportée"
+        except Exception as e:
+            return f"Erreur: {str(e)}"
+    
+    def _arun(self, url, action="get"):
+        return self._run(url, action)
+
+# Outil pour les connexions socket directes
+class SocketTool(BaseTool):
+    name = "socket_tool"
+    description = "Établit des connexions socket directes"
+    
+    def _run(self, host, port, data=None):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect((host, port))
+                if data:
+                    s.sendall(data.encode())
+                return s.recv(1024).decode()
+        except Exception as e:
+            return f"Erreur: {str(e)}"
+    
+    def _arun(self, host, port, data=None):
+        return self._run(host, port, data)
+
+# Outil pour les requêtes API
+class APIGatewayTool(BaseTool):
+    name = "api_gateway_tool"
+    description = "Effectue des requêtes API sécurisées"
+    
+    def _run(self, url, method="GET", data=None, headers=None):
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                json=data,
+                headers=headers,
+                timeout=10
+            )
+            return response.json()
+        except Exception as e:
+            return f"Erreur: {str(e)}"
+    
+    def _arun(self, url, method="GET", data=None, headers=None):
+        return self._run(url, method, data, headers)
+
 # Outil pour surveiller les ressources système
 class SystemMonitorTool(BaseTool):
     name = "system_monitor_tool"
@@ -100,103 +160,100 @@ class SystemMonitorTool(BaseTool):
     def _arun(self, query_type="all"):
         return self._run(query_type)
 
+def main():
+    parser = argparse.ArgumentParser(description='Assistant IA avec mode collaboration')
+    parser.add_argument('--mode', choices=['system', 'collaboration'], default='system',
+                      help='Mode de fonctionnement (system ou collaboration)')
+    parser.add_argument('--task', type=str, help='Tâche à exécuter en mode collaboration')
+    args = parser.parse_args()
+
+    # Création des outils
+    tools = [
+        CommandTool(),
+        FileTool(),
+        SystemMonitorTool(),
+        WebBrowserTool(),
+        SocketTool(),
+        APIGatewayTool()
+    ]
+
+    if args.mode == 'system':
+        # Mode système standard
+        assistant = Agent(
+            role="Assistant Système Avancé",
+            goal="Aider à gérer l'ordinateur et automatiser des tâches complexes",
+            backstory="Je suis un assistant IA puissant conçu pour l'automatisation et la gestion des tâches système sur un ordinateur haute performance.",
+            verbose=True,
+            tools=tools,
+            llm=ollama_llm
+        )
+
+        task = Task(
+            description="Analyser les performances actuelles du système et générer un rapport",
+            expected_output="Rapport de performance du système",
+            agent=assistant
+        )
+
+        crew = Crew(
+            agents=[assistant],
+            tasks=[task],
+            verbose=2,
+            process=Process.sequential
+        )
+
+        result = crew.kickoff()
+        print(result)
+
+    else:  # Mode collaboration
+        # Agent principal
+        main_assistant = Agent(
+            role="Assistant Principal",
+            goal="Coordonner les tâches et gérer la collaboration entre les agents",
+            backstory="Je suis l'assistant principal qui coordonne les différents agents spécialisés.",
+            verbose=True,
+            tools=tools,
+            llm=ollama_llm
+        )
+
+        # Agent spécialisé web
+        web_assistant = Agent(
+            role="Assistant Web",
+            goal="Gérer les interactions web et les requêtes API",
+            backstory="Je suis spécialisé dans la navigation web et les interactions API.",
+            verbose=True,
+            tools=[WebBrowserTool(), APIGatewayTool()],
+            llm=ollama_llm
+        )
+
+        # Agent spécialisé système
+        system_assistant = Agent(
+            role="Assistant Système",
+            goal="Gérer les tâches système et la gestion des fichiers",
+            backstory="Je suis spécialisé dans la gestion du système et des fichiers.",
+            verbose=True,
+            tools=[CommandTool(), FileTool(), SystemMonitorTool()],
+            llm=ollama_llm
+        )
+
+        # Création des tâches en fonction de la demande
+        tasks = []
+        if args.task:
+            tasks.append(Task(
+                description=args.task,
+                expected_output="Résultat de la tâche demandée",
+                agent=main_assistant
+            ))
+
+        # Création de l'équipe en mode collaboration
+        crew = Crew(
+            agents=[main_assistant, web_assistant, system_assistant],
+            tasks=tasks,
+            verbose=2,
+            process=Process.sequential
+        )
+
+        result = crew.kickoff()
+        print(result)
+
 if __name__ == "__main__":
-    print("🤖 Démarrage de l'Assistant IA...")
-    
-    # Vérifier si Ollama est installé et en cours d'exécution
-    try:
-        ollama_version = subprocess.run(["ollama", "version"], capture_output=True, text=True)
-        print(f"✅ Ollama détecté: {ollama_version.stdout.strip()}")
-    except:
-        print("❌ Ollama n'est pas installé ou n'est pas dans le PATH")
-        print("Veuillez installer Ollama depuis: https://ollama.com/download/windows")
-        exit(1)
-    
-    # Vérifier si le modèle mixtral est disponible
-    try:
-        models = subprocess.run(["ollama", "list"], capture_output=True, text=True)
-        if "mixtral" not in models.stdout:
-            print("⬇️ Le modèle mixtral n'est pas disponible. Téléchargement en cours...")
-            subprocess.run(["ollama", "pull", "mixtral"], check=True)
-        print("✅ Modèle mixtral disponible")
-    except Exception as e:
-        print(f"❌ Erreur lors de la vérification/téléchargement du modèle: {str(e)}")
-        exit(1)
-    
-    # Création de l'agent assistant système
-    assistant = Agent(
-        role="Assistant Système Avancé",
-        goal="Aider à gérer l'ordinateur et automatiser des tâches complexes",
-        backstory="Je suis un assistant IA puissant conçu pour l'automatisation et la gestion des tâches système sur un ordinateur haute performance.",
-        verbose=True,
-        tools=[CommandTool(), FileTool(), SystemMonitorTool()],
-        llm=ollama_llm
-    )
-    
-    # Menu interactif
-    print("\n=== 🤖 ASSISTANT IA - MENU DES TÂCHES ===")
-    print("1. Analyser les performances du système")
-    print("2. Nettoyer les fichiers temporaires")
-    print("3. Vérifier les mises à jour logicielles")
-    print("4. Analyser l'utilisation du disque")
-    print("5. Mode conversation libre")
-    print("======================================")
-    
-    choice = input("Choisissez une option (1-5): ")
-    
-    if choice == "1":
-        task = Task(
-            description="Analyser les performances actuelles du système et générer un rapport complet incluant CPU, RAM, GPU, et recommandations d'optimisation.",
-            expected_output="Rapport de performance du système",
-            agent=assistant
-        )
-    elif choice == "2":
-        task = Task(
-            description="Identifier et nettoyer les fichiers temporaires qui prennent de l'espace inutilement sur le système.",
-            expected_output="Rapport sur les fichiers nettoyés et l'espace libéré",
-            agent=assistant
-        )
-    elif choice == "3":
-        task = Task(
-            description="Vérifier les mises à jour disponibles pour le système d'exploitation et les logiciels principaux installés.",
-            expected_output="Liste des mises à jour disponibles",
-            agent=assistant
-        )
-    elif choice == "4":
-        task = Task(
-            description="Analyser l'utilisation du disque et identifier les dossiers et fichiers qui occupent le plus d'espace.",
-            expected_output="Rapport sur l'utilisation du disque",
-            agent=assistant
-        )
-    elif choice == "5":
-        user_query = input("\nQue souhaitez-vous demander à l'Assistant IA? ")
-        task = Task(
-            description=f"Répondre à la demande de l'utilisateur: {user_query}",
-            expected_output="Réponse à la demande de l'utilisateur",
-            agent=assistant
-        )
-    else:
-        print("❌ Option invalide, utilisation de l'option 1 par défaut.")
-        task = Task(
-            description="Analyser les performances actuelles du système et générer un rapport.",
-            expected_output="Rapport de performance du système",
-            agent=assistant
-        )
-    
-    # Création de l'équipe (Crew)
-    crew = Crew(
-        agents=[assistant],
-        tasks=[task],
-        verbose=2,
-        process=Process.sequential  # Exécution séquentielle des tâches
-    )
-    
-    # Exécution de l'équipe
-    print("\n🚀 Exécution de la tâche... (cela peut prendre quelques minutes)")
-    result = crew.kickoff()
-    
-    print("\n=== 📋 RÉSULTAT DE LA TÂCHE ===")
-    print(result)
-    print("===============================")
-    
-    input("\nAppuyez sur Entrée pour quitter...") 
+    main()
