@@ -16,6 +16,9 @@ import time
 from enum import Enum
 from typing import Dict, List, Optional, Any, Union
 
+# Ajouter le chemin racine du projet au sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Configuration du logging
 logging.basicConfig(
     level=logging.INFO,
@@ -126,6 +129,22 @@ if LIMITED_MODE:
 # Variables globales
 app = Flask(__name__)
 CORS(app)
+
+# Route pour la page d'accueil
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# Route pour servir les fichiers statiques
+@app.route('/static/<path:path>')
+def serve_static(path):
+    try:
+        logger.info(f"Servir le fichier statique: {path}")
+        static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+        return send_from_directory(static_dir, path)
+    except Exception as e:
+        logger.error(f"Erreur lors du chargement du fichier statique {path}: {e}")
+        return f"Erreur: {str(e)}", 500
 
 # Initialisation du système
 def initialize_system():
@@ -533,6 +552,104 @@ def get_system_stats():
             })
     except Exception as e:
         logger.error(f"Erreur lors de la récupération des statistiques système: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/system/mode', methods=['GET'])
+def get_system_mode():
+    """Récupère le mode de fonctionnement du système (limité ou complet)"""
+    try:
+        return jsonify({
+            "mode": "LIMITED" if LIMITED_MODE else "FULL",
+            "message": "Fonctionnalités limitées" if LIMITED_MODE else "Fonctionnalités complètes"
+        })
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération du mode système: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/tasks', methods=['POST'])
+def create_task():
+    """Crée une nouvelle tâche"""
+    try:
+        data = request.json
+        description = data.get('description')
+        assigned_to = data.get('assigned_to')
+        priority_value = data.get('priority', Priority.MEDIUM.value)
+        
+        if not description or not assigned_to:
+            return jsonify({"error": "Description et assignation requises"}), 400
+            
+        if LIMITED_MODE:
+            # Mode limité - simuler la création de tâche
+            try:
+                priority = Priority(priority_value)
+            except ValueError:
+                priority = Priority.MEDIUM
+                
+            task = Task(
+                description=description,
+                assigned_to=assigned_to,
+                created_by="WebInterface",
+                priority=priority
+            )
+            simulated_tasks.append(task)
+            
+            return jsonify({
+                "success": True,
+                "task_id": task.task_id,
+                "task": task.to_dict()
+            })
+        else:
+            # Mode normal - utiliser le gestionnaire de communication
+            task_id = comm_manager.create_task(
+                description=description,
+                assigned_to=assigned_to,
+                created_by="WebInterface",
+                priority=priority_value
+            )
+            
+            return jsonify({
+                "success": True,
+                "task_id": task_id
+            })
+    except Exception as e:
+        logger.error(f"Erreur lors de la création de la tâche: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/messages', methods=['GET'])
+def get_messages():
+    """Récupère les messages récents"""
+    try:
+        if LIMITED_MODE:
+            messages_data = [msg.to_dict() for msg in simulated_messages]
+            return jsonify(messages_data)
+        else:
+            # Filtres optionnels
+            sender = request.args.get('sender')
+            recipient = request.args.get('recipient')
+            limit = int(request.args.get('limit', 50))
+            
+            # Accès direct à l'attribut messages du CommunicationManager
+            if hasattr(comm_manager, 'messages'):
+                all_messages = comm_manager.messages
+                
+                # Filtrer les messages
+                filtered_messages = []
+                for msg in all_messages:
+                    if sender and msg.get('sender') != sender:
+                        continue
+                    if recipient and msg.get('recipient') != recipient:
+                        continue
+                    filtered_messages.append(msg)
+                
+                # Limiter le nombre de messages
+                filtered_messages = filtered_messages[-limit:]
+                
+                return jsonify(filtered_messages)
+            else:
+                logger.warning("L'attribut 'messages' n'existe pas dans CommunicationManager")
+                return jsonify([])
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des messages: {e}")
         return jsonify({"error": str(e)}), 500
 
 # Le reste du code existant...

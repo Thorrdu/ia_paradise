@@ -4,13 +4,13 @@
 
 :root {
     /* Palette de couleurs */
-    --primary-color: #3a86ff;
+    --primary-color: #4a6cf7;
     --primary-dark: #3a5bd9;
     --primary-light: #7a92ff;
-    --secondary-color: #8338ec;
-    --success-color: #38b000;
-    --warning-color: #ffbe0b;
-    --danger-color: #ff0a54;
+    --secondary-color: #6a7dfb;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
     --light-color: #f8f9fa;
     --dark-color: #343a40;
     --gray-color: #6c757d;
@@ -43,11 +43,12 @@
     --shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
     --shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
     
-    --accent-color: #ff006e;
-    --background-color: #f8f9fa;
+    --accent-color: #f75c4a;
+    --background-color: #f5f7ff;
     --card-color: #ffffff;
-    --text-color: #212529;
-    --border-color: #dee2e6;
+    --text-color: #333333;
+    --text-secondary: #666666;
+    --border-color: #e0e0e0;
     --muted-color: #6c757d;
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --border-radius: 8px;
@@ -75,40 +76,43 @@ body, html {
 
 /* Header */
 header {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
-    padding: 1rem;
+    background-color: var(--card-color);
+    box-shadow: var(--shadow);
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: var(--shadow);
 }
 
 .logo-container {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 15px;
 }
 
 .logo {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: white;
-    padding: 5px;
+    height: 40px;
+    width: auto;
+}
+
+h1 {
+    font-size: 24px;
+    color: var(--primary-color);
+    font-weight: 600;
 }
 
 .system-status {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    font-size: 0.9rem;
+    gap: 10px;
 }
 
-.system-status span {
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    background-color: rgba(255, 255, 255, 0.2);
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--success-color);
+    display: inline-block;
 }
 
 /* Main Layout */

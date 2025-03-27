@@ -4,13 +4,14 @@ setlocal enabledelayedexpansion
 echo ===== Paradis IA - Nouvelle Architecture =====
 echo.
 
-REM Définir le chemin Python complet
-set PYTHON_EXE=C:\Users\utilisateur\AppData\Local\Programs\Python\Python313\python.exe
-set PIP_EXE=C:\Users\utilisateur\AppData\Local\Programs\Python\Python313\Scripts\pip.exe
+REM Utiliser py au lieu d'un chemin absolu pour Python
+set PYTHON_EXE=py
+set PIP_EXE=py -m pip
 
-REM Vérifier si Python est installé au chemin spécifié
-if not exist "%PYTHON_EXE%" (
-    echo [ERREUR] Python n'est pas trouvé au chemin %PYTHON_EXE%
+REM Vérifier si Python est installé
+where %PYTHON_EXE% >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+    echo [ERREUR] Python n'est pas trouvé avec la commande %PYTHON_EXE%
     echo         Installez Python depuis https://www.python.org/downloads/
     exit /b 1
 )
@@ -33,11 +34,11 @@ if not exist "web\templates" mkdir web\templates
 REM Vérifier si le dossier d'environnement virtuel existe
 if not exist "venv" (
     echo Création d'un environnement virtuel Python...
-    "%PYTHON_EXE%" -m venv venv
+    %PYTHON_EXE% -m venv venv
     
     echo Installation des dépendances...
     call venv\Scripts\activate.bat
-    "%PIP_EXE%" install flask flask-cors requests psutil
+    %PIP_EXE% install flask flask-cors requests psutil
     echo.
 ) else (
     call venv\Scripts\activate.bat
@@ -74,7 +75,7 @@ echo.
 echo [INFO] Lancement du test de la nouvelle architecture...
 echo.
 
-"%PYTHON_EXE%" test_new_architecture.py
+%PYTHON_EXE% test_new_architecture.py
 if %ERRORLEVEL% neq 0 (
     echo.
     echo [AVERTISSEMENT] Certains tests ont échoué. L'application pourrait fonctionner en mode limité.
@@ -89,6 +90,6 @@ echo.
 echo Appuyez sur Ctrl+C pour arrêter le serveur.
 echo.
 
-"%PYTHON_EXE%" web/app.py
+%PYTHON_EXE% web/app.py
 
 endlocal 

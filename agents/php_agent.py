@@ -76,34 +76,34 @@ class PHPDevAgent(BaseAgent):
         """Initialise la base de connaissances avec des informations PHP essentielles"""
         try:
             # Exemples de motifs d'erreurs PHP courants
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content="Les erreurs 'Undefined variable' en PHP se produisent quand on essaie d'utiliser une variable qui n'a pas été déclarée ou initialisée.",
                 metadata={"type": "error_pattern", "category": "undefined_variable"}
             )
             
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content="Les erreurs 'Class not found' indiquent généralement un problème avec l'autoloader, un namespace incorrect ou un fichier manquant.",
                 metadata={"type": "error_pattern", "category": "class_not_found"}
             )
             
             # Bonnes pratiques PHP
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content="PHP PSR-12: Les accolades de classe doivent être sur la ligne suivante, et les accolades de méthode et fonction doivent être sur la même ligne que la déclaration.",
                 metadata={"type": "best_practice", "category": "coding_style"}
             )
             
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content="Validation des entrées: Toujours filtrer et valider les entrées utilisateur avec filter_var ou des bibliothèques de validation pour éviter les injections.",
                 metadata={"type": "best_practice", "category": "security"}
             )
             
             # Frameworks PHP populaires
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content="Laravel est un framework PHP MVC moderne avec une syntaxe élégante et des fonctionnalités comme Eloquent ORM, Blade, etc.",
                 metadata={"type": "framework", "category": "laravel"}
             )
             
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content="Symfony est un framework PHP modulaire et composants réutilisables, souvent utilisé pour des applications d'entreprise.",
                 metadata={"type": "framework", "category": "symfony"}
             )
@@ -112,6 +112,41 @@ class PHPDevAgent(BaseAgent):
             
         except Exception as e:
             self.logger.error(f"Erreur lors de l'initialisation de la base de connaissances PHP: {e}")
+    
+    def _safe_add_knowledge(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> int:
+        """
+        Ajoute une connaissance PHP en gérant les erreurs d'embedding
+        
+        Args:
+            content: Contenu de la connaissance
+            metadata: Métadonnées associées
+            
+        Returns:
+            Index du document ajouté ou -1 en cas d'erreur
+        """
+        try:
+            # Essayer d'obtenir un embedding (peut échouer si le modèle n'est pas disponible)
+            embedding = None
+            if self.llm:
+                try:
+                    embedding_result = self.llm.embedding(content)
+                    if embedding_result and "embedding" in embedding_result:
+                        embedding = embedding_result["embedding"]
+                except Exception as e:
+                    self.logger.warning(f"Impossible de générer l'embedding pour la connaissance PHP: {e}")
+            
+            # Utiliser la méthode safe_add du stockage vectoriel
+            if hasattr(self.vector_store, "safe_add"):
+                return self.vector_store.safe_add(content, embedding, metadata)
+            else:
+                # Fallback si safe_add n'existe pas (utiliser la méthode normale avec un embedding vide)
+                if embedding is None:
+                    embedding = [0.0]  # Embedding factice
+                return self.vector_store.add(content, embedding, metadata)
+                
+        except Exception as e:
+            self.logger.error(f"Erreur lors de l'ajout de connaissance PHP: {e}")
+            return -1
     
     def _process_message(self, message_data: Dict[str, Any]) -> None:
         """
@@ -249,7 +284,7 @@ class PHPDevAgent(BaseAgent):
             r"->|::"
         ]
         
-        return any(re.search(pattern, content) for pattern in code_patterns)
+        return any(re.search(pattern, content, re.IGNORECASE) for pattern in code_patterns)
     
     def _create_error_analysis_prompt(self, content: str) -> str:
         """Crée un prompt pour l'analyse d'erreurs PHP"""
@@ -362,7 +397,7 @@ class PHPDevAgent(BaseAgent):
             }
             
             # Enregistrer cette analyse pour référence future
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content=f"Analyse d'erreur: {error_log}\n\nSolution: {analysis['analysis']}",
                 metadata={"type": "error_analysis", "error_type": analysis["error_type"]}
             )
@@ -486,7 +521,7 @@ class PHPDevAgent(BaseAgent):
             
             # Enregistrer cette connaissance pour la prochaine fois
             knowledge = response.get("response", "")
-            self.add_knowledge(
+            self._safe_add_knowledge(
                 content=knowledge,
                 metadata={"type": "framework", "category": framework.lower()}
             )

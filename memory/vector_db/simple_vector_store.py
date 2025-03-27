@@ -7,8 +7,12 @@ import os
 import json
 import math
 import time
+import logging
 from typing import Dict, List, Any, Optional, Tuple, Union
 import pickle
+
+# Configuration du logging
+logger = logging.getLogger("simple_vector_store")
 
 class SimpleVectorStore:
     """
@@ -51,7 +55,7 @@ class SimpleVectorStore:
                 with open(self.vectors_file, 'rb') as f:
                     self.vectors = pickle.load(f)
         except Exception as e:
-            print(f"Erreur lors du chargement des données: {e}")
+            logger.error(f"Erreur lors du chargement des données: {e}")
             # Initialiser avec des listes vides en cas d'erreur
             self.documents = []
             self.vectors = []
@@ -71,7 +75,7 @@ class SimpleVectorStore:
             with open(self.vectors_file, 'wb') as f:
                 pickle.dump(self.vectors, f)
         except Exception as e:
-            print(f"Erreur lors de la sauvegarde des données: {e}")
+            logger.error(f"Erreur lors de la sauvegarde des données: {e}")
     
     def add(self, document: str, embedding: List[float], metadata: Optional[Dict[str, Any]] = None) -> int:
         """
@@ -93,6 +97,31 @@ class SimpleVectorStore:
         self._save()
         
         return len(self.documents) - 1
+    
+    def safe_add(self, document: str, embedding: Optional[List[float]] = None, metadata: Optional[Dict[str, Any]] = None) -> int:
+        """
+        Ajoute un document au stockage de manière sécurisée, en gérant le cas où l'embedding est None
+        
+        Args:
+            document: Texte du document
+            embedding: Vecteur d'embedding du document (peut être None)
+            metadata: Métadonnées additionnelles (optionnel)
+            
+        Returns:
+            Index du document ajouté ou -1 en cas d'erreur
+        """
+        try:
+            # Si l'embedding est None, utiliser un vecteur vide (ne sera pas retrouvable par recherche)
+            if embedding is None:
+                logger.warning(f"Ajout du document sans embedding: '{document[:50]}...'")
+                embedding = [0.0]  # Vecteur vide qui ne sera pas retrouvable
+            
+            # Ajouter le document
+            return self.add(document, embedding, metadata)
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de l'ajout du document: {e}")
+            return -1
     
     def add_batch(
         self, 
@@ -128,6 +157,42 @@ class SimpleVectorStore:
         self._save()
         
         return list(range(start_idx, start_idx + len(documents)))
+    
+    def safe_add_batch(
+        self, 
+        documents: List[str], 
+        embeddings: Optional[List[List[float]]] = None, 
+        metadatas: Optional[List[Dict[str, Any]]] = None
+    ) -> List[int]:
+        """
+        Ajoute un lot de documents de manière sécurisée, en gérant le cas où certains embeddings sont None
+        
+        Args:
+            documents: Liste des textes
+            embeddings: Liste des vecteurs d'embedding (peut être None)
+            metadatas: Liste des métadonnées (optionnel)
+            
+        Returns:
+            Liste des indices des documents ajoutés
+        """
+        try:
+            # Si embeddings est None, créer une liste de vecteurs vides
+            if embeddings is None:
+                logger.warning("Ajout d'un lot de documents sans embeddings")
+                embeddings = [[0.0] for _ in range(len(documents))]
+            
+            # Si certains embeddings individuels sont None, les remplacer par des vecteurs vides
+            for i in range(len(embeddings)):
+                if embeddings[i] is None:
+                    logger.warning(f"Un embedding est None pour le document: '{documents[i][:50]}...'")
+                    embeddings[i] = [0.0]
+            
+            # Ajouter le lot
+            return self.add_batch(documents, embeddings, metadatas)
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de l'ajout du lot de documents: {e}")
+            return []
     
     def search(
         self, 
@@ -176,6 +241,34 @@ class SimpleVectorStore:
             })
         
         return results
+    
+    def safe_search(
+        self, 
+        query_embedding: Optional[List[float]] = None, 
+        top_k: int = 5,
+        score_threshold: Optional[float] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Recherche sécurisée qui gère le cas où l'embedding de requête est None
+        
+        Args:
+            query_embedding: Vecteur d'embedding de la requête (peut être None)
+            top_k: Nombre de résultats à retourner
+            score_threshold: Seuil minimal de score (entre 0 et 1)
+            
+        Returns:
+            Liste des résultats ou liste vide en cas d'erreur
+        """
+        try:
+            if query_embedding is None:
+                logger.warning("Tentative de recherche avec un embedding None")
+                return []
+            
+            return self.search(query_embedding, top_k, score_threshold)
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de la recherche: {e}")
+            return []
     
     def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         """
@@ -248,6 +341,6 @@ class SimpleVectorStore:
                 os.path.exists(f) for f in [self.data_file, self.vectors_file]
             ) else 0,
             'last_modified': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(
-                os.path.getmtime(self.data_file) if os.path.exists(self.data_file) else 0
+                os.path.getmtime(self.data_file) if os.path.exists(self.data_file) else time.time()
             ))
         } 

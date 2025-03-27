@@ -378,80 +378,105 @@ class BaseAgent:
             self.logger.error(f"Erreur lors de l'envoi du message: {e}")
             return {"error": str(e)}
     
-    def add_knowledge(
-        self,
-        content: str,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> int:
+    def add_knowledge(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> int:
         """
-        Ajoute une connaissance au stockage vectoriel de l'agent
+        Ajoute une connaissance à la base
         
         Args:
-            content: Contenu textuel à stocker
+            content: Contenu de la connaissance
             metadata: Métadonnées associées au contenu
             
         Returns:
-            Identifiant de la connaissance ajoutée
+            Index du document ou -1 en cas d'erreur
         """
         try:
-            # Générer l'embedding avec le modèle LLM
-            embedding = self.llm.embedding(content)
-            
-            if not embedding:
-                self.logger.error("Impossible de générer l'embedding")
+            # Vérifier si l'agent est initialisé
+            if not self.is_initialized:
+                self.logger.warning("Tentative d'ajout de connaissance alors que l'agent n'est pas initialisé")
                 return -1
             
-            # Ajouter au stockage vectoriel
-            doc_id = self.vector_store.add(
-                document=content,
-                embedding=embedding,
-                metadata=metadata or {}
-            )
+            # Vérifier si le stockage vectoriel est disponible
+            if not self.vector_store:
+                self.logger.warning("Aucun stockage vectoriel disponible pour ajouter une connaissance")
+                return -1
             
-            self.logger.info(f"Connaissance ajoutée avec ID {doc_id}")
-            return doc_id
+            # Générer l'embedding du contenu
+            embedding = None
+            try:
+                if self.llm:
+                    embedding_result = self.llm.embedding(content)
+                    if embedding_result and "embedding" in embedding_result:
+                        embedding = embedding_result["embedding"]
+                    else:
+                        self.logger.warning("L'embedding généré est vide ou mal formaté")
+            except Exception as e:
+                self.logger.warning(f"Impossible de générer l'embedding: {e}")
+            
+            # Utiliser la méthode safe_add si disponible
+            if hasattr(self.vector_store, "safe_add"):
+                doc_id = self.vector_store.safe_add(content, embedding, metadata)
+                self.logger.info(f"Connaissance ajoutée avec l'ID {doc_id}")
+                return doc_id
+            elif embedding is not None:
+                # Fallback si safe_add n'existe pas mais qu'on a un embedding
+                doc_id = self.vector_store.add(content, embedding, metadata)
+                self.logger.info(f"Connaissance ajoutée avec l'ID {doc_id}")
+                return doc_id
+            else:
+                # Aucun embedding disponible et pas de méthode safe_add
+                self.logger.error("Impossible d'ajouter la connaissance: pas d'embedding et pas de méthode safe_add")
+                return -1
             
         except Exception as e:
             self.logger.error(f"Erreur lors de l'ajout de connaissance: {e}")
             return -1
     
-    def search_knowledge(
-        self,
-        query: str,
-        top_k: int = 5,
-        score_threshold: float = 0.7
-    ) -> List[Dict[str, Any]]:
+    def search_knowledge(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """
-        Recherche des connaissances similaires à une requête
+        Recherche dans la base de connaissances
         
         Args:
-            query: Texte de la requête
-            top_k: Nombre maximum de résultats
-            score_threshold: Score minimum pour les résultats
+            query: Requête de recherche
+            top_k: Nombre de résultats à retourner
             
         Returns:
-            Liste des documents correspondants avec leurs scores
+            Liste des résultats correspondants
         """
         try:
-            # Générer l'embedding de la requête
-            query_embedding = self.llm.embedding(query)
-            
-            if not query_embedding:
-                self.logger.error("Impossible de générer l'embedding pour la requête")
+            # Vérifier si l'agent est initialisé
+            if not self.is_initialized:
+                self.logger.warning("Tentative de recherche alors que l'agent n'est pas initialisé")
                 return []
             
-            # Effectuer la recherche
-            results = self.vector_store.search(
-                query_embedding=query_embedding,
-                top_k=top_k,
-                score_threshold=score_threshold
-            )
+            # Vérifier si le stockage vectoriel est disponible
+            if not self.vector_store:
+                self.logger.warning("Aucun stockage vectoriel disponible pour la recherche")
+                return []
             
-            self.logger.info(f"Recherche effectuée: {len(results)} résultats trouvés")
+            # Générer l'embedding de la requête
+            embedding = None
+            try:
+                if self.llm:
+                    embedding_result = self.llm.embedding(query)
+                    if embedding_result and "embedding" in embedding_result:
+                        embedding = embedding_result["embedding"]
+            except Exception as e:
+                self.logger.error(f"Impossible de générer l'embedding pour la recherche: {e}")
+            
+            # Utiliser la méthode safe_search si disponible
+            if hasattr(self.vector_store, "safe_search"):
+                results = self.vector_store.safe_search(embedding, top_k=top_k)
+            elif embedding is not None:
+                # Fallback si safe_search n'existe pas mais qu'on a un embedding
+                results = self.vector_store.search(embedding, top_k=top_k)
+            else:
+                # Aucun embedding disponible
+                return []
+            
             return results
             
         except Exception as e:
-            self.logger.error(f"Erreur lors de la recherche de connaissances: {e}")
+            self.logger.error(f"Erreur lors de la recherche dans la base de connaissances: {e}")
             return []
     
     def create_task(

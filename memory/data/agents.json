@@ -1,0 +1,73 @@
+{
+  "TestAgent1": {
+    "name": "TestAgent1",
+    "capabilities": [
+      "test",
+      "communication"
+    ],
+    "metadata": {},
+    "created_at": "2025-03-27T22:48:21.405131",
+    "last_seen": "2025-03-27T23:07:32.669392"
+  },
+  "TestAgent2": {
+    "name": "TestAgent2",
+    "capabilities": [
+      "test",
+      "response"
+    ],
+    "metadata": {},
+    "created_at": "2025-03-27T22:48:21.405131",
+    "last_seen": "2025-03-27T23:07:32.668391"
+  },
+  "TestBaseAgent": {
+    "name": "TestBaseAgent",
+    "capabilities": [
+      "communication",
+      "basic_reasoning"
+    ],
+    "metadata": {
+      "model": "mixtral",
+      "provider": "ollama"
+    },
+    "created_at": "2025-03-27T22:48:21.422640",
+    "last_seen": "2025-03-27T23:07:32.697392"
+  },
+  "PHPDevAgent": {
+    "name": "PHPDevAgent",
+    "capabilities": [
+      "php_development",
+      "code_analysis",
+      "debugging",
+      "optimization",
+      "security_review",
+      "php_framework_knowledge",
+      "documentation"
+    ],
+    "metadata": {
+      "model": "deepseek-coder",
+      "provider": "ollama"
+    },
+    "created_at": "2025-03-27T22:48:21.429269",
+    "last_seen": "2025-03-27T23:07:32.704390"
+  },
+  "WebInterface": {
+    "name": "WebInterface",
+    "capabilities": [
+      "user_interaction",
+      "api"
+    ],
+    "metadata": {},
+    "created_at": "2025-03-27T23:09:55.084165",
+    "last_seen": "2025-03-27T23:15:36.992931"
+  },
+  "SystemAgent": {
+    "name": "SystemAgent",
+    "capabilities": [
+      "system_management",
+      "monitoring"
+    ],
+    "metadata": {},
+    "created_at": "2025-03-27T23:09:55.085164",
+    "last_seen": "2025-03-27T23:15:09.211333"
+  }
+}

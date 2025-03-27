@@ -1,0 +1,78 @@
+[
+  {
+    "message_id": "5564de4e-f67e-40fd-9d9c-91dc0ca28002",
+    "sender": "TestAgent1",
+    "recipient": "TestAgent2",
+    "content": "Ceci est un message de test.",
+    "priority": "MEDIUM",
+    "metadata": {},
+    "timestamp": "2025-03-27T22:48:21.406131",
+    "read": false
+  },
+  {
+    "message_id": "803a8337-135d-438d-bea0-8fda1686f419",
+    "sender": "TestAgent1",
+    "recipient": "TestAgent2",
+    "content": "Nouvelle tâche assignée: Tâche de test",
+    "priority": "MEDIUM",
+    "metadata": {
+      "task_id": "task-af6db"
+    },
+    "timestamp": "2025-03-27T22:48:21.407131",
+    "read": false
+  },
+  {
+    "message_id": "cc4a8c90-4411-480b-921b-4e971c07ce00",
+    "sender": "TestAgent1",
+    "recipient": "TestAgent2",
+    "content": "Ceci est un message de test.",
+    "priority": "MEDIUM",
+    "metadata": {},
+    "timestamp": "2025-03-27T22:54:36.643493",
+    "read": false
+  },
+  {
+    "message_id": "39e88779-bff4-4913-866e-81ccd585b7cd",
+    "sender": "TestAgent1",
+    "recipient": "TestAgent2",
+    "content": "Nouvelle tâche assignée: Tâche de test",
+    "priority": "MEDIUM",
+    "metadata": {
+      "task_id": "task-8d391"
+    },
+    "timestamp": "2025-03-27T22:54:36.644492",
+    "read": false
+  },
+  {
+    "message_id": "fe49c344-a7d5-45eb-a127-64e19e18bf2d",
+    "sender": "TestAgent1",
+    "recipient": "TestAgent2",
+    "content": "Ceci est un message de test.",
+    "priority": "MEDIUM",
+    "metadata": {},
+    "timestamp": "2025-03-27T23:07:32.668391",
+    "read": false
+  },
+  {
+    "message_id": "1ba97652-1194-4f3f-a7e3-1c40806497de",
+    "sender": "TestAgent1",
+    "recipient": "TestAgent2",
+    "content": "Nouvelle tâche assignée: Tâche de test",
+    "priority": "MEDIUM",
+    "metadata": {
+      "task_id": "task-a879e"
+    },
+    "timestamp": "2025-03-27T23:07:32.669392",
+    "read": false
+  },
+  {
+    "message_id": "bf8eb3e5-67c5-469a-9413-62d97dc76210",
+    "sender": "WebInterface",
+    "recipient": "SystemAgent",
+    "content": "say hello",
+    "priority": "MEDIUM",
+    "metadata": {},
+    "timestamp": "2025-03-27T23:15:36.992931",
+    "read": false
+  }
+]
