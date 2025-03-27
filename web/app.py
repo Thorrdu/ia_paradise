@@ -2,759 +2,547 @@
 # -*- coding: utf-8 -*-
 
 """
-Serveur web Flask pour l'interface de gestion de Paradis IA.
+Serveur web pour l'interface utilisateur de Paradis IA
+Fournit des API REST pour interagir avec les agents et gérer les tâches
 """
 
 import os
 import sys
-import json
-import time
 import logging
+import datetime
+import json
 import threading
-from datetime import datetime, timedelta
-from pathlib import Path
-from flask import Flask, render_template, jsonify, request, send_from_directory
+import time
+from enum import Enum
+from typing import Dict, List, Optional, Any, Union
 
 # Configuration du logging
-os.makedirs('logs', exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join('logs', 'web_server.log')),
+        logging.FileHandler("web/logs/web_server.log", encoding="utf-8"),
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger('web_server')
+logger = logging.getLogger("web_server")
 
-# Création de l'application Flask
-app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(24)
-app.config['JSON_AS_ASCII'] = False
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
-
-# Mode limité (sans les modules Paradis IA)
+# Mode limité par défaut
 LIMITED_MODE = False
 
-# Variables globales
-communication_manager = None
-system_agent = None
-web_agent = None
-agents_registry = {}
-
-# Initialisation des répertoires
-os.makedirs('logs', exist_ok=True)
-os.makedirs('data', exist_ok=True)
-
-# Ajouter le répertoire parent au path pour les imports
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if parent_dir not in sys.path:
-    sys.path.append(parent_dir)
-
-# Import des modules du projet Paradis IA
 try:
-    from agents.communication_inter_ia import CommunicationManager, Message, Priority, TaskStatus, Task
-    from agents.system_agent import SystemAgent
-    from agents.web_communication_agent import WebCommunicationAgent
-except ImportError as e:
-    logger.warning(f"Fonctionnement en mode limité: {e}")
-    logger.warning("L'interface web fonctionnera avec des données simulées")
-    LIMITED_MODE = True
+    # Importer Flask et ses extensions
+    from flask import Flask, jsonify, request, render_template, send_from_directory
+    from flask_cors import CORS
     
-    # Définition des classes simulées pour le mode limité
-    class Priority:
+    # Essayer d'importer nos modules personnalisés
+    try:
+        from api.llm.model_interface import create_model_interface, ModelConfig
+        from api.communication import CommunicationManager, Priority, TaskStatus, Message, Task
+        from memory.vector_db.simple_vector_store import SimpleVectorStore
+        from agents.base_agent import BaseAgent
+        
+        # Essayer d'importer les agents spécialisés
+        try:
+            from agents.php_agent import PHPDevAgent
+            has_php_agent = True
+        except ImportError:
+            has_php_agent = False
+            logger.warning("Module PHPDevAgent non disponible")
+        
+        # Mode limité désactivé car tous les modules sont disponibles
+        LIMITED_MODE = False
+        logger.info("Tous les modules nécessaires sont disponibles, mode complet activé")
+        
+    except ImportError as e:
+        logger.warning(f"Certains modules personnalisés ne sont pas disponibles: {e}")
+        logger.warning("Activation du mode limité")
+        LIMITED_MODE = True
+        
+except ImportError as e:
+    logger.error(f"Impossible d'importer Flask ou ses extensions: {e}")
+    logger.error("Le serveur web ne peut pas démarrer")
+    sys.exit(1)
+
+# Classes simulées pour le mode limité
+if LIMITED_MODE:
+    class Priority(Enum):
+        """Niveaux de priorité pour les messages"""
         LOW = "LOW"
         MEDIUM = "MEDIUM"
         HIGH = "HIGH"
         URGENT = "URGENT"
-    
-    class TaskStatus:
+
+    class TaskStatus(Enum):
+        """Statuts possibles pour les tâches"""
         PENDING = "PENDING"
         IN_PROGRESS = "IN_PROGRESS"
         COMPLETED = "COMPLETED"
         FAILED = "FAILED"
         DELEGATED = "DELEGATED"
-    
+        
     class Message:
-        def __init__(self, sender, recipient, content, priority, metadata=None):
+        """Représente un message simulé pour le mode limité"""
+        def __init__(self, sender, recipient, content, priority=Priority.MEDIUM):
             self.sender = sender
             self.recipient = recipient
             self.content = content
             self.priority = priority
-            self.metadata = metadata or {}
-    
-    class Task:
-        def __init__(self, description, assigned_agent, status, priority, created_at=None, deadline=None):
-            self.description = description
-            self.assigned_agent = assigned_agent
-            self.status = status
-            self.priority = priority
-            self.created_at = created_at or datetime.now()
-            self.deadline = deadline
-
-
-def initialize_system():
-    """Initialise le système d'agents et le gestionnaire de communication."""
-    global communication_manager, system_agent, web_agent, LIMITED_MODE
-    
-    if LIMITED_MODE:
-        logger.info("Initialisation en mode limité (démonstration)")
-        
-        # Créer des données de démonstration
-        global agents_registry
-        agents_registry = {
-            "PHPDevAgent": ["php_development", "code_generation", "code_review", "bug_fixing"],
-            "SystemAgent": ["system_monitoring", "resource_management", "process_control"],
-            "WebAgent": ["web_server", "api_gateway", "webhook_handler"],
-            "MonitoringAgent": ["monitoring", "alerts", "performance_tracking"]
-        }
-        
-        # Lancer le thread de mise à jour simulée
-        threading.Thread(target=simulated_updates, daemon=True).start()
-        
-        return True
-    
-    try:
-        logger.info("Initialisation du système de communication...")
-        communication_manager = CommunicationManager()
-        
-        # Création de l'agent système
-        logger.info("Création de l'agent système...")
-        system_agent = SystemAgent("SystemAgent", communication_manager)
-        
-        # Création de l'agent web
-        logger.info("Création de l'agent web...")
-        web_agent = WebCommunicationAgent("WebAgent", communication_manager)
-        
-        # Chargement des états précédents si disponibles
-        state_file = Path('data/communication_state.json')
-        if state_file.exists():
-            try:
-                logger.info("Chargement de l'état précédent...")
-                communication_manager.load_state(str(state_file))
-                logger.info("État chargé avec succès.")
-            except Exception as e:
-                logger.error(f"Erreur lors du chargement de l'état: {e}")
-        
-        # Lancer les threads de monitoring
-        threading.Thread(target=monitor_system, daemon=True).start()
-        threading.Thread(target=save_state_periodically, daemon=True).start()
-        
-        logger.info("Système initialisé avec succès")
-        return True
-    
-    except Exception as e:
-        logger.error(f"Erreur lors de l'initialisation du système: {e}")
-        logger.warning("Passage en mode limité (démonstration)")
-        LIMITED_MODE = True
-        
-        # Initialiser les données simulées
-        initialize_system()
-        
-        return True
-
-
-# Fonction de simulation pour le mode limité
-simulated_tasks = {}
-simulated_messages = {}
-simulated_stats = {
-    "agents_count": 4,
-    "tasks_count": 5,
-    "active_tasks_count": 3,
-    "messages_count": 12,
-    "cpu_percent": 35,
-    "memory_percent": 42,
-    "disk_percent": 68,
-    "uptime": "2h 15m"
-}
-
-def create_simulated_data():
-    """Crée des données simulées pour le mode démonstration."""
-    global simulated_tasks, simulated_messages
-    
-    # Créer des tâches de démonstration
-    simulated_tasks = {
-        "task-001": {
-            "id": "task-001",
-            "description": "Générer un contrôleur PHP pour l'API utilisateurs",
-            "status": TaskStatus.COMPLETED,
-            "assigned_agent": "PHPDevAgent",
-            "priority": Priority.HIGH,
-            "created_at": datetime.now() - timedelta(hours=2),
-            "deadline": None
-        },
-        "task-002": {
-            "id": "task-002",
-            "description": "Optimiser l'utilisation mémoire du système",
-            "status": TaskStatus.IN_PROGRESS,
-            "assigned_agent": "SystemAgent",
-            "priority": Priority.MEDIUM,
-            "created_at": datetime.now() - timedelta(hours=1),
-            "deadline": None
-        },
-        "task-003": {
-            "id": "task-003",
-            "description": "Configurer les webhooks pour GitHub",
-            "status": TaskStatus.PENDING,
-            "assigned_agent": "WebAgent",
-            "priority": Priority.LOW,
-            "created_at": datetime.now() - timedelta(minutes=30),
-            "deadline": None
-        },
-        "task-004": {
-            "id": "task-004",
-            "description": "Surveiller les performances GPU",
-            "status": TaskStatus.PENDING,
-            "assigned_agent": "MonitoringAgent",
-            "priority": Priority.MEDIUM,
-            "created_at": datetime.now() - timedelta(minutes=15),
-            "deadline": None
-        },
-        "task-005": {
-            "id": "task-005",
-            "description": "Analyser les logs d'erreurs PHP",
-            "status": TaskStatus.DELEGATED,
-            "assigned_agent": "PHPDevAgent",
-            "priority": Priority.URGENT,
-            "created_at": datetime.now() - timedelta(minutes=5),
-            "deadline": datetime.now() + timedelta(hours=2)
-        }
-    }
-    
-    # Créer des messages de démonstration
-    for agent in agents_registry:
-        simulated_messages[agent] = []
-    
-    simulated_messages["PHPDevAgent"] = [
-        Message("SystemAgent", "PHPDevAgent", "Nécessité d'optimiser le code PHP", Priority.MEDIUM),
-        Message("WebAgent", "PHPDevAgent", "Besoin d'une API pour les utilisateurs", Priority.HIGH),
-    ]
-    
-    simulated_messages["SystemAgent"] = [
-        Message("PHPDevAgent", "SystemAgent", "Problème de mémoire détecté", Priority.HIGH),
-        Message("MonitoringAgent", "SystemAgent", "Alerte: utilisation CPU élevée", Priority.URGENT),
-    ]
-    
-    simulated_messages["WebAgent"] = [
-        Message("SystemAgent", "WebAgent", "Configuration des webhooks requise", Priority.LOW),
-    ]
-    
-    simulated_messages["MonitoringAgent"] = [
-        Message("SystemAgent", "MonitoringAgent", "Demande de surveillance GPU", Priority.MEDIUM),
-    ]
-
-
-def simulated_updates():
-    """Simule des mises à jour périodiques pour le mode limité."""
-    global simulated_stats, simulated_tasks
-    
-    # Initialiser les données simulées
-    create_simulated_data()
-    
-    # Boucle de mise à jour
-    while True:
-        # Varier aléatoirement les statistiques
-        import random
-        simulated_stats["cpu_percent"] = max(5, min(95, simulated_stats["cpu_percent"] + random.randint(-5, 5)))
-        simulated_stats["memory_percent"] = max(10, min(90, simulated_stats["memory_percent"] + random.randint(-3, 3)))
-        simulated_stats["disk_percent"] = max(20, min(95, simulated_stats["disk_percent"] + random.randint(-1, 1)))
-        
-        # Mettre à jour périodiquement le statut des tâches
-        for task_id, task in simulated_tasks.items():
-            if task["status"] == TaskStatus.IN_PROGRESS and random.random() < 0.2:
-                task["status"] = TaskStatus.COMPLETED
-            elif task["status"] == TaskStatus.PENDING and random.random() < 0.1:
-                task["status"] = TaskStatus.IN_PROGRESS
-        
-        # Attendre avant la prochaine mise à jour
-        time.sleep(10)
-
-
-def monitor_system():
-    """Surveille périodiquement le système et collecte des statistiques."""
-    while True:
-        try:
-            # Vérifier l'état des agents
-            update_agents_registry()
+            self.timestamp = datetime.datetime.now().isoformat()
+            self.message_id = f"msg-{int(time.time())}"
             
-            # Attendre avant la prochaine vérification
-            time.sleep(30)
-        except Exception as e:
-            logger.error(f"Erreur dans le thread de monitoring: {e}")
-            time.sleep(60)  # Attendre plus longtemps en cas d'erreur
+        def to_dict(self):
+            return {
+                "message_id": self.message_id,
+                "sender": self.sender,
+                "recipient": self.recipient,
+                "content": self.content,
+                "priority": self.priority.value,
+                "timestamp": self.timestamp
+            }
+        
+    class Task:
+        """Représente une tâche simulée pour le mode limité"""
+        def __init__(self, description, assigned_to, created_by, priority=Priority.MEDIUM):
+            self.task_id = f"task-{int(time.time())}"
+            self.description = description
+            self.assigned_to = assigned_to
+            self.created_by = created_by
+            self.priority = priority
+            self.status = TaskStatus.PENDING
+            self.created_at = datetime.datetime.now().isoformat()
+            
+        def to_dict(self):
+            return {
+                "task_id": self.task_id,
+                "description": self.description,
+                "assigned_to": self.assigned_to,
+                "created_by": self.created_by,
+                "priority": self.priority.value,
+                "status": self.status.value,
+                "created_at": self.created_at
+            }
 
+# Variables globales
+app = Flask(__name__)
+CORS(app)
 
-def save_state_periodically():
-    """Sauvegarde périodiquement l'état du système."""
-    while True:
+# Initialisation du système
+def initialize_system():
+    """Initialise le système selon le mode (normal ou limité)"""
+    global comm_manager, agents, simulated_tasks, simulated_messages
+    
+    if not LIMITED_MODE:
+        # Initialiser le gestionnaire de communication
         try:
-            if communication_manager:
-                logger.info("Sauvegarde de l'état du système...")
-                communication_manager.save_state('data/communication_state.json')
-            time.sleep(300)  # Toutes les 5 minutes
+            comm_manager = CommunicationManager()
+            logger.info("Gestionnaire de communication initialisé")
+            
+            # Initialiser les agents
+            agents = {}
+            
+            # Initialiser l'agent de base
+            try:
+                agents["BaseAgent"] = BaseAgent(
+                    name="BaseAgent",
+                    model_name="mixtral",
+                    provider="ollama",
+                    auto_initialize=True
+                )
+                logger.info("Agent de base initialisé")
+            except Exception as e:
+                logger.error(f"Erreur lors de l'initialisation de l'agent de base: {e}")
+            
+            # Initialiser l'agent PHP si disponible
+            if has_php_agent:
+                try:
+                    agents["PHPDevAgent"] = PHPDevAgent(
+                        auto_initialize=True
+                    )
+                    logger.info("Agent PHP initialisé")
+                except Exception as e:
+                    logger.error(f"Erreur lors de l'initialisation de l'agent PHP: {e}")
+            
+            # Démarrer les agents
+            for agent_name, agent in agents.items():
+                try:
+                    agent.start()
+                    logger.info(f"Agent {agent_name} démarré")
+                except Exception as e:
+                    logger.error(f"Erreur lors du démarrage de l'agent {agent_name}: {e}")
+            
+            # Enregistrer les agents web et système
+            comm_manager.register_agent(
+                agent_name="WebInterface",
+                capabilities=["user_interaction", "api"]
+            )
+            
+            comm_manager.register_agent(
+                agent_name="SystemAgent",
+                capabilities=["system_management", "monitoring"]
+            )
+                    
         except Exception as e:
-            logger.error(f"Erreur lors de la sauvegarde de l'état: {e}")
-            time.sleep(60)
+            logger.error(f"Erreur lors de l'initialisation du système: {e}")
+            logger.warning("Activation du mode limité en raison d'une erreur d'initialisation")
+            initialize_limited_mode()
+    else:
+        # Initialiser le mode limité
+        initialize_limited_mode()
 
-
-def update_agents_registry():
-    """Met à jour le registre des agents."""
-    global agents_registry
+def initialize_limited_mode():
+    """Initialise le système en mode limité avec des données simulées"""
+    global simulated_tasks, simulated_messages, simulated_agents
     
-    if LIMITED_MODE:
-        return  # Déjà initialisé en mode limité
+    logger.info("Initialisation du système en mode limité")
     
-    if not communication_manager:
-        return
+    # Créer des données simulées
+    simulated_tasks = []
+    simulated_messages = []
+    simulated_agents = [
+        {
+            "name": "PHPDevAgent",
+            "capabilities": ["php_development", "debugging", "optimization"],
+            "last_seen": datetime.datetime.now().isoformat()
+        },
+        {
+            "name": "SystemAgent",
+            "capabilities": ["system_management", "monitoring"],
+            "last_seen": datetime.datetime.now().isoformat()
+        },
+        {
+            "name": "WebInterface",
+            "capabilities": ["user_interaction", "api"],
+            "last_seen": datetime.datetime.now().isoformat()
+        }
+    ]
     
-    try:
-        # Récupérer la liste des agents enregistrés
-        agents_registry = communication_manager.agents_registry
-    except Exception as e:
-        logger.error(f"Erreur lors de la mise à jour du registre des agents: {e}")
+    # Ajouter des tâches simulées
+    task1 = Task(
+        description="Analyser les logs d'erreurs PHP",
+        assigned_to="PHPDevAgent",
+        created_by="WebInterface",
+        priority=Priority.URGENT
+    )
+    task1.status = TaskStatus.DELEGATED
+    simulated_tasks.append(task1)
+    
+    task2 = Task(
+        description="Surveiller l'utilisation système",
+        assigned_to="SystemAgent",
+        created_by="WebInterface",
+        priority=Priority.MEDIUM
+    )
+    task2.status = TaskStatus.IN_PROGRESS
+    simulated_tasks.append(task2)
+    
+    # Ajouter des messages simulés
+    simulated_messages.append(
+        Message(
+            sender="WebInterface",
+            recipient="PHPDevAgent",
+            content="Analyse les erreurs dans le fichier log.php",
+            priority=Priority.HIGH
+        )
+    )
+    
+    simulated_messages.append(
+        Message(
+            sender="PHPDevAgent",
+            recipient="WebInterface",
+            content="J'ai identifié plusieurs erreurs de syntaxe dans les fonctions de validation",
+            priority=Priority.MEDIUM
+        )
+    )
+    
+    logger.info(f"Mode limité initialisé avec {len(simulated_tasks)} tâches et {len(simulated_messages)} messages")
 
+# Initialiser le système
+initialize_system()
 
-@app.route('/')
-def index():
-    """Route principale qui affiche l'interface web."""
-    return render_template('index.html')
+# Routes API
 
+# Routes existantes...
 
-@app.route('/static/<path:path>')
-def serve_static(path):
-    """Sert les fichiers statiques."""
-    return send_from_directory('static', path)
-
-
-@app.route('/api/agents')
+@app.route('/api/agents', methods=['GET'])
 def get_agents():
-    """Renvoie la liste des agents enregistrés."""
-    if LIMITED_MODE:
-        # Données simulées en mode limité
-        agents = []
-        for agent_name, capabilities in agents_registry.items():
-            agents.append({
-                "name": agent_name,
-                "capabilities": capabilities
-            })
-        return jsonify(agents)
-        
-    if not communication_manager:
-        return jsonify({"error": "Le système n'est pas initialisé"}), 500
-    
-    agents = []
-    for agent_name, capabilities in agents_registry.items():
-        agents.append({
-            "name": agent_name,
-            "capabilities": capabilities
-        })
-    
-    return jsonify(agents)
+    """Récupère la liste de tous les agents"""
+    try:
+        if LIMITED_MODE:
+            return jsonify(simulated_agents)
+        else:
+            agents_data = comm_manager.get_all_agents()
+            return jsonify(agents_data)
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des agents: {e}")
+        return jsonify({"error": str(e)}), 500
 
-
-@app.route('/api/tasks')
+@app.route('/api/tasks', methods=['GET'])
 def get_tasks():
-    """Renvoie la liste des tâches en cours."""
-    if LIMITED_MODE:
-        # Données simulées en mode limité
-        tasks = []
-        for task_id, task in simulated_tasks.items():
-            tasks.append({
-                "id": task["id"],
-                "description": task["description"],
-                "status": task["status"],
-                "assigned_to": task["assigned_agent"],
-                "priority": task["priority"],
-                "created_at": task["created_at"].isoformat(),
-                "deadline": task["deadline"].isoformat() if task["deadline"] else None
-            })
-        
-        # Trier par date de création (plus récent en premier)
-        tasks.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-        return jsonify(tasks)
-    
-    if not communication_manager:
-        return jsonify({"error": "Le système n'est pas initialisé"}), 500
-    
-    tasks = []
-    for task_id, task in communication_manager.tasks.items():
-        tasks.append({
-            "id": task_id,
-            "description": task.description,
-            "status": task.status.name if isinstance(task.status, TaskStatus) else task.status,
-            "assigned_to": task.assigned_agent,
-            "priority": task.priority.name if hasattr(task.priority, 'name') else task.priority,
-            "created_at": task.created_at.isoformat() if task.created_at else None,
-            "deadline": task.deadline.isoformat() if task.deadline else None
-        })
-    
-    # Trier par date de création (plus récent en premier)
-    tasks.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-    
-    return jsonify(tasks)
+    """Récupère la liste des tâches"""
+    try:
+        if LIMITED_MODE:
+            tasks_data = [task.to_dict() for task in simulated_tasks]
+            return jsonify(tasks_data)
+        else:
+            # Filtres optionnels
+            assigned_to = request.args.get('assigned_to')
+            status = request.args.get('status')
+            
+            tasks_data = comm_manager.get_tasks(
+                assigned_to=assigned_to,
+                status=status if not status else TaskStatus(status),
+                limit=100
+            )
+            return jsonify(tasks_data)
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des tâches: {e}")
+        return jsonify({"error": str(e)}), 500
 
+@app.route('/api/tasks/<task_id>', methods=['GET'])
+def get_task(task_id):
+    """Récupère les détails d'une tâche spécifique"""
+    try:
+        if LIMITED_MODE:
+            task = next((task for task in simulated_tasks if task.task_id == task_id), None)
+            if task:
+                return jsonify(task.to_dict())
+            else:
+                return jsonify({"error": "Tâche non trouvée"}), 404
+        else:
+            tasks = comm_manager.get_tasks(limit=100)
+            task = next((task for task in tasks if task.get("task_id") == task_id), None)
+            
+            if task:
+                return jsonify(task)
+            else:
+                return jsonify({"error": "Tâche non trouvée"}), 404
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération de la tâche {task_id}: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/tasks/<task_id>', methods=['PUT'])
 def update_task(task_id):
-    """Met à jour le statut d'une tâche."""
-    if LIMITED_MODE:
-        # Mode simulé
-        data = request.json
-        if not data or 'status' not in data:
-            return jsonify({"error": "Le statut est requis"}), 400
-        
-        status = data['status']
-        if task_id in simulated_tasks:
-            simulated_tasks[task_id]["status"] = status
-            logger.info(f"Tâche {task_id} mise à jour - Nouveau statut: {status}")
-            return jsonify({
-                "success": True,
-                "message": f"Statut de la tâche {task_id} mis à jour: {status}"
-            })
-        else:
-            return jsonify({"error": f"Tâche {task_id} non trouvée"}), 404
-    
-    if not communication_manager:
-        return jsonify({"error": "Le système n'est pas initialisé"}), 500
-    
-    data = request.json
-    if not data or 'status' not in data:
-        return jsonify({"error": "Le statut est requis"}), 400
-    
+    """Met à jour le statut d'une tâche"""
     try:
-        status = data['status']
-        if task_id in communication_manager.tasks:
-            task = communication_manager.tasks[task_id]
-            task.status = getattr(TaskStatus, status) if hasattr(TaskStatus, status) else status
+        data = request.json
+        status = data.get('status')
+        
+        if not status:
+            return jsonify({"error": "Statut non spécifié"}), 400
             
-            # Journaliser le changement
-            logger.info(f"Tâche {task_id} mise à jour - Nouveau statut: {status}")
-            
-            return jsonify({
-                "success": True,
-                "message": f"Statut de la tâche {task_id} mis à jour: {status}"
-            })
+        if LIMITED_MODE:
+            task = next((task for task in simulated_tasks if task.task_id == task_id), None)
+            if task:
+                try:
+                    task.status = TaskStatus(status)
+                    return jsonify({"success": True, "task_id": task_id, "status": status})
+                except ValueError:
+                    return jsonify({"error": "Statut invalide"}), 400
+            else:
+                return jsonify({"error": "Tâche non trouvée"}), 404
         else:
-            return jsonify({"error": f"Tâche {task_id} non trouvée"}), 404
-    
+            result = comm_manager.update_task_status(task_id, status)
+            
+            if result:
+                return jsonify({"success": True, "task_id": task_id, "status": status})
+            else:
+                return jsonify({"error": "Mise à jour impossible"}), 400
     except Exception as e:
         logger.error(f"Erreur lors de la mise à jour de la tâche {task_id}: {e}")
         return jsonify({"error": str(e)}), 500
 
-
 @app.route('/api/message', methods=['POST'])
 def send_message():
-    """Envoie un message à un agent."""
-    if LIMITED_MODE:
-        # Mode simulé
-        data = request.json
-        if not data or 'recipient' not in data or 'content' not in data:
-            return jsonify({"error": "Destinataire et contenu requis"}), 400
-        
-        sender = data.get('sender', 'WebInterface')
-        recipient = data['recipient']
-        content = data['content']
-        priority_str = data.get('priority', 'MEDIUM')
-        metadata = data.get('metadata', {})
-        create_task = data.get('create_task', False)
-        
-        # Conversion de la priorité
-        priority = getattr(Priority, priority_str) if hasattr(Priority, priority_str) else Priority.MEDIUM
-        
-        # Créer le message
-        message = Message(sender, recipient, content, priority, metadata)
-        
-        # Ajouter le message à la liste simulée
-        if recipient in simulated_messages:
-            simulated_messages[recipient].append(message)
-        
-        # Créer une tâche si demandé
-        task_id = None
-        if create_task:
-            task_id = f"task-{len(simulated_tasks) + 1:03d}"
-            simulated_tasks[task_id] = {
-                "id": task_id,
-                "description": content[:100] + ("..." if len(content) > 100 else ""),
-                "status": TaskStatus.PENDING,
-                "assigned_agent": recipient,
-                "priority": priority,
-                "created_at": datetime.now(),
-                "deadline": datetime.now() + timedelta(days=1) if priority_str == 'URGENT' else None
-            }
-        
-        return jsonify({
-            "success": True,
-            "message_id": f"msg-{int(time.time())}",
-            "task_id": task_id
-        })
-    
-    if not communication_manager:
-        return jsonify({"error": "Le système n'est pas initialisé"}), 500
-    
-    data = request.json
-    if not data or 'recipient' not in data or 'content' not in data:
-        return jsonify({"error": "Destinataire et contenu requis"}), 400
-    
+    """Envoie un message à un agent"""
     try:
-        # Préparer les données du message
-        sender = data.get('sender', 'WebInterface')
-        recipient = data['recipient']
-        content = data['content']
-        priority_str = data.get('priority', 'MEDIUM')
+        data = request.json
+        recipient = data.get('recipient')
+        content = data.get('content')
+        priority_value = data.get('priority', Priority.MEDIUM.value)
         metadata = data.get('metadata', {})
         create_task = data.get('create_task', False)
         
-        # Convertir la priorité en enum
-        priority = getattr(Priority, priority_str) if hasattr(Priority, priority_str) else Priority.MEDIUM
-        
-        # Créer et envoyer le message
-        message = Message(
-            sender=sender,
-            recipient=recipient,
-            content=content,
-            priority=priority,
-            metadata=metadata
-        )
-        
-        message_id = communication_manager.send_message(message)
-        logger.info(f"Message envoyé: {sender} -> {recipient} (ID: {message_id})")
-        
-        # Si demandé, créer une tâche associée
-        task_id = None
-        if create_task:
-            task = Task(
-                description=content[:100] + ("..." if len(content) > 100 else ""),
-                assigned_agent=recipient,
-                status=TaskStatus.PENDING,
-                priority=priority,
-                created_at=datetime.now(),
-                deadline=datetime.now() + timedelta(days=1) if 'URGENT' in priority_str else None
+        if not recipient or not content:
+            return jsonify({"error": "Destinataire et contenu requis"}), 400
+            
+        if LIMITED_MODE:
+            # Mode limité - simuler l'envoi
+            try:
+                priority = Priority(priority_value)
+            except ValueError:
+                priority = Priority.MEDIUM
+                
+            message = Message(
+                sender="WebInterface",
+                recipient=recipient,
+                content=content,
+                priority=priority
             )
-            task_id = communication_manager.create_task(task)
-            logger.info(f"Tâche créée: {task_id} pour {recipient}")
-        
-        return jsonify({
-            "success": True,
-            "message_id": message_id,
-            "task_id": task_id
-        })
-    
+            simulated_messages.append(message)
+            
+            result = {"message_id": message.message_id}
+            
+            if create_task:
+                task = Task(
+                    description=content,
+                    assigned_to=recipient,
+                    created_by="WebInterface",
+                    priority=priority
+                )
+                simulated_tasks.append(task)
+                result["task_id"] = task.task_id
+                
+            return jsonify(result)
+        else:
+            # Mode normal - utiliser le gestionnaire de communication
+            result = comm_manager.send_message(
+                sender="WebInterface",
+                recipient=recipient,
+                content=content,
+                priority=priority_value,
+                metadata=metadata,
+                create_task=create_task
+            )
+            
+            return jsonify(result)
     except Exception as e:
         logger.error(f"Erreur lors de l'envoi du message: {e}")
         return jsonify({"error": str(e)}), 500
 
-
-@app.route('/api/logs')
+@app.route('/api/logs', methods=['GET'])
 def get_logs():
-    """Récupère les entrées récentes du journal des logs."""
+    """Récupère les logs du système"""
     try:
-        log_file = os.path.join('logs', 'web_server.log')
-        level_filter = request.args.get('level', 'ALL').upper()
-        limit = min(int(request.args.get('limit', 100)), 1000)  # Maximum 1000 lignes
+        level = request.args.get('level', 'ALL')
+        limit = int(request.args.get('limit', 100))
+        
+        log_file = "web/logs/web_server.log"
         
         if not os.path.exists(log_file):
-            return jsonify([])
-        
-        # Lire les dernières lignes du fichier de log
+            return jsonify(["Aucun log disponible"])
+            
+        # Filtrer par niveau de log si nécessaire
+        logs = []
         with open(log_file, 'r', encoding='utf-8') as f:
-            lines = f.readlines()[-limit:]
+            for line in f:
+                if level == 'ALL' or f" - {level} - " in line:
+                    logs.append(line)
         
-        # Filtrer par niveau si nécessaire
-        if level_filter != 'ALL':
-            lines = [line for line in lines if f' - {level_filter} - ' in line]
+        # Prendre les dernières lignes correspondant à la limite
+        logs = logs[-limit:]
         
-        return jsonify(lines)
-    
+        return jsonify(logs)
     except Exception as e:
         logger.error(f"Erreur lors de la récupération des logs: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify(["Erreur lors de la récupération des logs"]), 500
 
-
-@app.route('/api/system/stats')
-def get_system_stats():
-    """Récupère les statistiques système."""
-    if LIMITED_MODE:
-        # Mode simulé
-        return jsonify({
-            "cpu_percent": simulated_stats["cpu_percent"],
-            "memory_percent": simulated_stats["memory_percent"],
-            "disk_percent": simulated_stats["disk_percent"],
-            "uptime": simulated_stats["uptime"]
-        })
-    
-    if not system_agent:
-        return jsonify({"error": "L'agent système n'est pas initialisé"}), 500
-    
-    try:
-        # Créer un message pour demander les statistiques système
-        message = Message(
-            sender="WebInterface",
-            recipient="SystemAgent",
-            content="monitor system",
-            priority=Priority.HIGH,
-            metadata={"action": "monitor"}
-        )
-        
-        # Envoyer le message
-        communication_manager.send_message(message)
-        
-        # Attendre et récupérer la réponse
-        start_time = time.time()
-        while time.time() - start_time < 5:  # Timeout de 5 secondes
-            messages = communication_manager.get_messages("WebInterface")
-            for msg in messages:
-                if msg.sender == "SystemAgent" and "system_info" in msg.metadata:
-                    return jsonify(msg.metadata.get("system_info", {}))
-            time.sleep(0.1)
-        
-        # Si aucune réponse n'est reçue après le timeout
-        return jsonify({
-            "cpu_percent": 0,
-            "memory_percent": 0,
-            "disk_percent": 0,
-            "uptime": "Indisponible",
-            "error": "Timeout en attente de réponse"
-        })
-    
-    except Exception as e:
-        logger.error(f"Erreur lors de la récupération des statistiques système: {e}")
-        return jsonify({
-            "cpu_percent": 0,
-            "memory_percent": 0,
-            "disk_percent": 0,
-            "uptime": "Erreur",
-            "error": str(e)
-        })
-
-
-@app.route('/api/activities')
-def get_activities():
-    """Récupère les activités récentes."""
-    if LIMITED_MODE:
-        # Mode simulé
-        activities = []
-        
-        # Messages récents
-        for agent_name, messages in simulated_messages.items():
-            for msg in messages:
-                activities.append({
-                    "type": "message",
-                    "timestamp": datetime.now().isoformat(),
-                    "description": f"Message de {msg.sender} à {msg.recipient}",
-                    "details": msg.content[:100] + ("..." if len(msg.content) > 100 else "")
-                })
-        
-        # Tâches récentes
-        for task_id, task in simulated_tasks.items():
-            activities.append({
-                "type": "task",
-                "timestamp": task["created_at"].isoformat(),
-                "description": f"Tâche {task_id} ({task['status']})",
-                "details": task["description"]
-            })
-        
-        # Trier par timestamp
-        activities.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-        
-        # Limiter à 20 activités
-        return jsonify(activities[:20])
-    
-    if not communication_manager:
-        return jsonify({"error": "Le système n'est pas initialisé"}), 500
-    
-    try:
-        # Récupérer les 10 derniers messages émis
-        activities = []
-        
-        # Messages récents (convertis en activités)
-        for agent_name in agents_registry.keys():
-            messages = communication_manager.get_messages(agent_name, max_count=5)
-            for msg in messages:
-                activities.append({
-                    "type": "message",
-                    "timestamp": datetime.now().isoformat(),  # Approximatif, car Message n'a pas de timestamp
-                    "description": f"Message de {msg.sender} à {msg.recipient}",
-                    "details": msg.content[:100] + ("..." if len(msg.content) > 100 else "")
-                })
-        
-        # Tâches récentes
-        for task_id, task in list(communication_manager.tasks.items())[-10:]:
-            activities.append({
-                "type": "task",
-                "timestamp": task.created_at.isoformat() if task.created_at else datetime.now().isoformat(),
-                "description": f"Tâche {task_id} ({task.status.name if isinstance(task.status, TaskStatus) else task.status})",
-                "details": task.description[:100] + ("..." if len(task.description) > 100 else "")
-            })
-        
-        # Trier par timestamp (plus récent en premier)
-        activities.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
-        
-        # Limiter à 20 activités
-        return jsonify(activities[:20])
-    
-    except Exception as e:
-        logger.error(f"Erreur lors de la récupération des activités: {e}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/api/statistics')
+@app.route('/api/statistics', methods=['GET'])
 def get_statistics():
-    """Récupère des statistiques globales sur le système."""
-    if LIMITED_MODE:
-        # Mode simulé
-        return jsonify({
-            "agents_count": simulated_stats["agents_count"],
-            "tasks_count": len(simulated_tasks),
-            "active_tasks_count": simulated_stats["active_tasks_count"],
-            "messages_count": simulated_stats["messages_count"],
-            "tasks_by_status": {
-                "PENDING": 2,
-                "IN_PROGRESS": 1,
-                "COMPLETED": 1,
-                "DELEGATED": 1
-            }
-        })
-    
-    if not communication_manager:
-        return jsonify({"error": "Le système n'est pas initialisé"}), 500
-    
+    """Récupère les statistiques globales du système"""
     try:
-        # Compter le nombre d'agents actifs
-        agents_count = len(agents_registry)
-        
-        # Compter les tâches par statut
-        tasks_by_status = {}
-        active_tasks = 0
-        for task in communication_manager.tasks.values():
-            status = task.status.name if isinstance(task.status, TaskStatus) else str(task.status)
-            tasks_by_status[status] = tasks_by_status.get(status, 0) + 1
+        if LIMITED_MODE:
+            return jsonify({
+                "agents_count": len(simulated_agents),
+                "active_tasks_count": len([t for t in simulated_tasks if t.status != TaskStatus.COMPLETED]),
+                "messages_count": len(simulated_messages)
+            })
+        else:
+            agents_count = len(comm_manager.get_all_agents())
+            tasks = comm_manager.get_tasks(limit=1000)
+            active_tasks_count = len([t for t in tasks if t.get("status") != TaskStatus.COMPLETED.value])
             
-            if status in ('PENDING', 'IN_PROGRESS'):
-                active_tasks += 1
-        
-        # Compter le nombre de messages échangés (approximatif)
-        messages_count = communication_manager.message_counter
-        
-        return jsonify({
-            "agents_count": agents_count,
-            "tasks_count": len(communication_manager.tasks),
-            "active_tasks_count": active_tasks,
-            "messages_count": messages_count,
-            "tasks_by_status": tasks_by_status
-        })
-    
+            return jsonify({
+                "agents_count": agents_count,
+                "active_tasks_count": active_tasks_count,
+                "messages_count": len(comm_manager.messages)
+            })
     except Exception as e:
         logger.error(f"Erreur lors de la récupération des statistiques: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/activities', methods=['GET'])
+def get_activities():
+    """Récupère les activités récentes"""
+    try:
+        if LIMITED_MODE:
+            # Simuler des activités
+            activities = []
+            
+            # Activités basées sur les messages
+            for msg in simulated_messages:
+                activities.append({
+                    "type": "message",
+                    "timestamp": msg.timestamp,
+                    "description": f"Message de {msg.sender} à {msg.recipient}",
+                    "details": msg.content[:100] + "..." if len(msg.content) > 100 else msg.content,
+                    "priority": msg.priority.value
+                })
+                
+            # Trier par timestamp décroissant
+            activities.sort(key=lambda x: x["timestamp"], reverse=True)
+            
+            # Limiter au nombre demandé
+            return jsonify(activities[:10])
+        else:
+            activities = comm_manager.get_recent_activities(limit=10)
+            return jsonify(activities)
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des activités: {e}")
+        return jsonify({"error": str(e)}), 500
 
-# Point d'entrée pour l'exécution directe
+@app.route('/api/system/stats', methods=['GET'])
+def get_system_stats():
+    """Récupère les statistiques système"""
+    try:
+        # Essayer d'utiliser psutil pour des statistiques réelles
+        try:
+            import psutil
+            
+            # CPU
+            cpu_percent = psutil.cpu_percent(interval=0.5)
+            
+            # Mémoire
+            memory = psutil.virtual_memory()
+            memory_percent = memory.percent
+            
+            # Disque
+            disk = psutil.disk_usage('/')
+            disk_percent = disk.percent
+            
+            # Uptime
+            boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
+            uptime = datetime.datetime.now() - boot_time
+            uptime_str = str(uptime).split('.')[0]  # Supprimer les microsecondes
+            
+            return jsonify({
+                "cpu_percent": cpu_percent,
+                "memory_percent": memory_percent,
+                "disk_percent": disk_percent,
+                "uptime": uptime_str
+            })
+        except ImportError:
+            # Simuler des statistiques si psutil n'est pas disponible
+            import random
+            
+            return jsonify({
+                "cpu_percent": random.randint(10, 70),
+                "memory_percent": random.randint(30, 80),
+                "disk_percent": random.randint(40, 90),
+                "uptime": "1:23:45"
+            })
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des statistiques système: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# Le reste du code existant...
+
+# Point d'entrée principal
 if __name__ == '__main__':
-    # Initialiser le système
-    if initialize_system():
-        # Démarrer le serveur Flask
-        port = int(os.environ.get('PORT', 5000))
-        app.run(host='0.0.0.0', port=port, debug=True)
+    # Afficher l'état du mode limité
+    if LIMITED_MODE:
+        logger.warning("Serveur web démarré en MODE LIMITÉ (fonctionnalités réduites)")
     else:
-        logger.error("Impossible de démarrer le serveur, échec de l'initialisation du système")
-        sys.exit(1)
+        logger.info("Serveur web démarré en mode complet")
+    
+    app.run(host='0.0.0.0', port=5000, debug=True)

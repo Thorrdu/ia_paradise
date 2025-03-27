@@ -192,4 +192,75 @@ Ce projet est sous licence MIT. Vous êtes libre de l'utiliser, le modifier et l
 
 ---
 
-Créé avec ❤️ pour exploiter pleinement votre matériel haut de gamme sans dépendre de services cloud payants. 
+Créé avec ❤️ pour exploiter pleinement votre matériel haut de gamme sans dépendre de services cloud payants.
+
+# Paradis IA
+
+Architecture multi-agents pour l'automatisation des tâches de développement et d'analyse.
+
+## Architecture
+
+Le projet Paradis IA utilise une architecture en couches:
+
+1. **Couche de modèles** - Gérée par Ollama, fournit les capacités d'intelligence artificielle
+2. **Couche d'abstraction API** - Interface unifiée pour interagir avec différents LLMs
+3. **Système de gestion des connaissances** - Stockage vectoriel simple pour la mémoire des agents
+4. **Agents spécialisés** - Développement PHP, analyse d'erreurs, etc.
+5. **Interface utilisateur** - API REST et interface web
+
+## Prérequis
+
+- Python 3.9+
+- [Ollama](https://ollama.com/download/windows) (pour les modèles locaux)
+- Modèles recommandés:
+  - mixtral (requis)
+  - deepseek-coder (recommandé pour les agents de développement)
+
+## Installation
+
+1. Clonez ce dépôt
+2. Installez Ollama et les modèles requis
+3. Exécutez `lancer_nouvelle_architecture.bat` pour configurer l'environnement
+
+## Structure des dossiers
+
+```
+paradis-ia/
+├── agents/                   # Agents spécialisés
+│   ├── base_agent.py         # Classe de base pour tous les agents
+│   └── php_agent.py          # Agent spécialisé pour PHP
+├── api/                      # Couche d'abstraction API
+│   ├── communication.py      # Système de communication inter-agents
+│   └── llm/                  # Interface unifiée pour les LLMs
+│       └── model_interface.py
+├── memory/                   # Système de gestion des connaissances
+│   └── vector_db/            # Stockage vectoriel pour la mémoire des agents
+│       └── simple_vector_store.py
+├── web/                      # Interface web
+│   ├── app.py                # Serveur Flask pour l'API REST
+│   ├── static/               # Fichiers statiques (JS, CSS)
+│   └── templates/            # Templates HTML
+├── test_new_architecture.py  # Script de test de l'architecture
+└── lancer_nouvelle_architecture.bat  # Script de lancement
+```
+
+## Utilisation
+
+1. Lancez le système avec `lancer_nouvelle_architecture.bat`
+2. Accédez à l'interface web: http://localhost:5000
+3. Interagissez avec les agents via les messages ou en créant des tâches
+
+## Monitoring des ressources
+
+Le système surveille automatiquement l'utilisation du CPU, de la RAM et du GPU (si disponible) pour optimiser les performances.
+
+## Mode limité
+
+Si certains composants ne sont pas disponibles (comme Ollama), le système fonctionnera en mode limité avec des fonctionnalités réduites.
+
+## Développement
+
+Pour ajouter un nouvel agent:
+1. Créez une nouvelle classe qui hérite de `BaseAgent`
+2. Implémentez les méthodes spécifiques à l'agent
+3. Ajoutez l'agent au gestionnaire de communication dans `web/app.py` 
