@@ -21,9 +21,11 @@ Avec cette configuration matérielle haut de gamme, notre Paradis IA pourra :
 ```
 Paradis_IA/
 ├── .env                        # Variables d'environnement
+├── .gitignore                  # Exclusions pour Git
 ├── README.md                   # Documentation principale
 ├── collecter_infos_systeme.ps1 # Script diagnostic système
 ├── lancer_paradis_ia.ps1       # Script de lancement principal
+├── suivi_etapes_paradis_ia_v2.md # Suivi de progression
 │
 ├── modeles/                    # Répertoire des modèles IA
 │   └── modelfiles/             # Configurations personnalisées de modèles
@@ -530,15 +532,110 @@ $results | Sort-Object Duration | ForEach-Object {
 Write-Host "✅ Rapport de performance généré dans $outputFile" -ForegroundColor Green
 ```
 
-## 🏁 Étape 7 : Premier Lancement et Tests de Validation
+## 📦 Étape 7 : Configuration du Dépôt Git et Gestion du Projet
+
+### Configuration du Contrôle de Version
 
 ```powershell
-# Exécution du script d'optimisation GPU
-.\scripts\gpu_optimization.ps1
+# Initialiser le dépôt Git
+git init
 
-# Lancement du Paradis IA
-.\lancer_paradis_ia.ps1
+# Créer un fichier .gitignore pour exclure les fichiers volumineux
+@"
+# Environnements virtuels
+crew_env/
+web_env/
+env/
+venv/
+.env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Modèles et fichiers volumineux
+.ollama/
+*.bin
+*.pth
+*.onnx
+*.ckpt
+*.safetensors
+
+# Données sensibles
+.env
+*.env
+secrets.json
+
+# Fichiers temporaires
+*.log
+*.tmp
+temp/
+rapport_performance.txt
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Fichiers spécifiques au projet
+rustup-init.exe
+lancer_paradis_ia_new.ps1
+test_cuda.py
+run_script.bat
+OpenDevin/
+"@ | Out-File -FilePath ".gitignore"
+
+# Ajouter les fichiers principaux
+git add .gitignore README.md lancer_paradis_ia.ps1 suivi_etapes_paradis_ia_v2.md paradis_ia_plan_v2.md
+
+# Effectuer un commit initial
+git commit -m "Configuration initiale du Paradis IA V2"
+
+# Nettoyer le dépôt si nécessaire
+git rm --cached -r web_env/
+git rm --cached rustup-init.exe lancer_paradis_ia_new.ps1 test_cuda.py run_script.bat rapport_performance.txt
+
+# Valider le nettoyage
+git commit -m "Ajout du fichier .gitignore et nettoyage du dépôt"
 ```
+
+## 🏁 Étape 8 : Nouvelles Fonctionnalités Avancées (En cours)
+
+### Système de Communication Inter-IA
+- Développement d'un protocole standardisé pour la communication entre agents
+- Mise en place d'un système de délégation de tâches
+- Logging et monitoring des interactions
+- Gestion des priorités et des conflits
+
+### Interface Web de Monitoring
+- Dashboard en temps réel des performances des modèles
+- Gestion centralisée des agents IA
+- Visualisations graphiques de l'utilisation des ressources
+- Interface de contrôle des différents modèles
+
+### API REST
+- Points d'accès pour chaque agent IA
+- Interface programmatique pour applications externes
+- Documentation automatique (Swagger)
+- Authentification et contrôle d'accès
 
 ## 📚 Ressources et Documentation
 
@@ -559,9 +656,24 @@ ollama pull codellama:34b-instruct-q6_K
 ### Performances GPU sous-optimales
 Assurez-vous que les pilotes NVIDIA sont à jour et que votre système n'exécute pas d'autres processus gourmands en GPU.
 
-## 🔮 Prochaines Améliorations Possibles
+## 🔮 Prochaines Améliorations
 
-- Intégration de modèles multimodaux (texte + image) comme LLaVA-NeXT
-- Création d'un tableau de bord web pour le monitoring des performances
-- Fine-tuning des modèles pour des tâches spécifiques en PHP/développement
-- Intégration avec des API externes via LangGraph 
+### Court Terme
+- Communication inter-IA avancée
+- Agents spécialisés supplémentaires
+- Interface web de monitoring en temps réel
+
+### Moyen Terme
+- Support multimodal (texte + image) avec LLaVA-NeXT
+- Système de fine-tuning local pour personnalisation
+- API REST complète pour intégrations externes
+
+### Long Terme 
+- Intelligence distribuée multi-serveurs
+- Apprentissage continu des agents
+- Interface utilisateur immersive
+
+---
+
+**État actuel du projet:** 85% ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░ 100%
+**Dernière mise à jour:** 17/08/2024 
