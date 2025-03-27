@@ -273,39 +273,7 @@ Structuration optimale des dossiers pour une expérience utilisateur fluide.
 - [x] Tester OpenDevin pour un projet PHP complet
 - [x] Vérifier l'utilisation et les performances du GPU
 
-## 📦 Phase 6 : Configuration du dépôt Git et gestion de projet
-
-### Mise en place du contrôle de version
-- [x] Initialiser le dépôt Git
-  ```powershell
-  git init
-  ```
-- [x] Créer un fichier .gitignore pour exclure les fichiers volumineux
-  ```powershell
-  # Créer un fichier .gitignore complet avec exclusions pour:
-  # - Environnements virtuels
-  # - Modèles IA
-  # - Fichiers temporaires
-  # - Rapports de performance
-  ```
-- [x] Nettoyer le dépôt
-  ```powershell
-  # Retirer les fichiers indésirables du suivi Git
-  git rm --cached -r web_env/
-  git rm --cached rustup-init.exe lancer_paradis_ia_new.ps1 test_cuda.py run_script.bat rapport_performance.txt
-  ```
-- [x] Effectuer un commit initial
-  ```powershell
-  git add .gitignore
-  git commit -m "Ajout du fichier .gitignore et nettoyage du dépôt"
-  ```
-
-### Documentation et suivi de progression
-- [x] Créer README.md avec instructions détaillées
-- [x] Maintenir le fichier de suivi des étapes à jour
-- [x] Documenter les performances observées
-
-## 🚀 Phase 7 : Nouvelles Fonctionnalités Avancées
+## 🚀 Phase 6 : Nouvelles Fonctionnalités Avancées
 
 ### 1. Communication Inter-IA
 - [ ] Mise en place du système de communication entre agents

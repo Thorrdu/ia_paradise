@@ -21,7 +21,6 @@ Avec cette configuration matérielle haut de gamme, notre Paradis IA pourra :
 ```
 Paradis_IA/
 ├── .env                        # Variables d'environnement
-├── .gitignore                  # Exclusions pour Git
 ├── README.md                   # Documentation principale
 ├── collecter_infos_systeme.ps1 # Script diagnostic système
 ├── lancer_paradis_ia.ps1       # Script de lancement principal
@@ -532,92 +531,7 @@ $results | Sort-Object Duration | ForEach-Object {
 Write-Host "✅ Rapport de performance généré dans $outputFile" -ForegroundColor Green
 ```
 
-## 📦 Étape 7 : Configuration du Dépôt Git et Gestion du Projet
-
-### Configuration du Contrôle de Version
-
-```powershell
-# Initialiser le dépôt Git
-git init
-
-# Créer un fichier .gitignore pour exclure les fichiers volumineux
-@"
-# Environnements virtuels
-crew_env/
-web_env/
-env/
-venv/
-.env/
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Modèles et fichiers volumineux
-.ollama/
-*.bin
-*.pth
-*.onnx
-*.ckpt
-*.safetensors
-
-# Données sensibles
-.env
-*.env
-secrets.json
-
-# Fichiers temporaires
-*.log
-*.tmp
-temp/
-rapport_performance.txt
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Fichiers spécifiques au projet
-rustup-init.exe
-lancer_paradis_ia_new.ps1
-test_cuda.py
-run_script.bat
-OpenDevin/
-"@ | Out-File -FilePath ".gitignore"
-
-# Ajouter les fichiers principaux
-git add .gitignore README.md lancer_paradis_ia.ps1 suivi_etapes_paradis_ia_v2.md paradis_ia_plan_v2.md
-
-# Effectuer un commit initial
-git commit -m "Configuration initiale du Paradis IA V2"
-
-# Nettoyer le dépôt si nécessaire
-git rm --cached -r web_env/
-git rm --cached rustup-init.exe lancer_paradis_ia_new.ps1 test_cuda.py run_script.bat rapport_performance.txt
-
-# Valider le nettoyage
-git commit -m "Ajout du fichier .gitignore et nettoyage du dépôt"
-```
-
-## 🏁 Étape 8 : Nouvelles Fonctionnalités Avancées (En cours)
+## 🏁 Étape 7 : Nouvelles Fonctionnalités Avancées (En cours)
 
 ### Système de Communication Inter-IA
 - Développement d'un protocole standardisé pour la communication entre agents
