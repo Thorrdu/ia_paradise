@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paradis IA - Interface de Gestion</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/styles.css">
+    
+    <!-- Bootstrap (CDN) pour un design responsive -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="header">
+            <div class="row align-items-center py-3">
+                <div class="col-md-2 text-center text-md-start">
+                    <div class="logo-container">
+                        <img src="/static/logo.png" alt="Paradis IA Logo" class="logo">
+                    </div>
+                </div>
+                <div class="col-md-8 text-center">
+                    <h1>Paradis IA - Interface de Gestion</h1>
+                    <p class="subtitle">Contrôle et monitoring des agents intelligents</p>
+                </div>
+                <div class="col-md-2 text-center text-md-end">
+                    <div class="system-status">
+                        <span id="status-indicator" class="status-indicator online"></span>
+                        <span id="status-text">En ligne</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <div class="row">
+                <!-- Left Sidebar - Navigation -->
+                <div class="col-md-2 sidebar">
+                    <nav>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-view="dashboard">
+                                    <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-view="agents">
+                                    <i class="fas fa-robot"></i> Agents
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-view="tasks">
+                                    <i class="fas fa-tasks"></i> Tâches
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-view="messaging">
+                                    <i class="fas fa-comment-dots"></i> Messagerie
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-view="logs">
+                                    <i class="fas fa-clipboard-list"></i> Logs
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+                
+                <!-- Main Content Area -->
+                <div class="col-md-10 main-content">
+                    <!-- Dashboard View -->
+                    <div id="dashboard-view" class="content-view active">
+                        <h2><i class="fas fa-tachometer-alt"></i> Tableau de bord</h2>
+                        
+                        <!-- Stats Cards -->
+                        <div class="row stats-cards">
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <i class="fas fa-robot stat-icon"></i>
+                                        <span>Agents</span>
+                                    </div>
+                                    <div class="stat-card-body">
+                                        <span id="agents-count" class="stat-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <i class="fas fa-tasks stat-icon"></i>
+                                        <span>Tâches actives</span>
+                                    </div>
+                                    <div class="stat-card-body">
+                                        <span id="active-tasks-count" class="stat-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <i class="fas fa-comment-dots stat-icon"></i>
+                                        <span>Messages</span>
+                                    </div>
+                                    <div class="stat-card-body">
+                                        <span id="messages-count" class="stat-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="stat-card">
+                                    <div class="stat-card-header">
+                                        <i class="fas fa-clock stat-icon"></i>
+                                        <span>Uptime</span>
+                                    </div>
+                                    <div class="stat-card-body">
+                                        <span id="uptime" class="stat-value">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- System Resources -->
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-microchip"></i> Ressources Système</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="resource-meter">
+                                            <label>CPU</label>
+                                            <div class="progress">
+                                                <div id="cpu-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <span id="cpu-value">--</span>
+                                        </div>
+                                        <div class="resource-meter">
+                                            <label>Mémoire</label>
+                                            <div class="progress">
+                                                <div id="memory-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <span id="memory-value">--</span>
+                                        </div>
+                                        <div class="resource-meter">
+                                            <label>Disque</label>
+                                            <div class="progress">
+                                                <div id="disk-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <span id="disk-value">--</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-chart-line"></i> Activités Récentes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="activities-list" class="activities-list">
+                                            <li class="placeholder">Chargement des activités...</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Agents View -->
+                    <div id="agents-view" class="content-view">
+                        <h2><i class="fas fa-robot"></i> Agents</h2>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Agents Enregistrés</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="agents-list" class="agents-container">
+                                    <div class="placeholder">Chargement des agents...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tasks View -->
+                    <div id="tasks-view" class="content-view">
+                        <h2><i class="fas fa-tasks"></i> Tâches</h2>
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5>Liste des Tâches</h5>
+                                <button id="refresh-tasks" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-sync-alt"></i> Actualiser
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Description</th>
+                                                <th>Statut</th>
+                                                <th>Agent</th>
+                                                <th>Priorité</th>
+                                                <th>Créé le</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tasks-list">
+                                            <tr>
+                                                <td colspan="7" class="text-center">Chargement des tâches...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Messaging View -->
+                    <div id="messaging-view" class="content-view">
+                        <h2><i class="fas fa-comment-dots"></i> Messagerie</h2>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Envoyer un Message</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="message-form">
+                                    <div class="mb-3">
+                                        <label for="recipient" class="form-label">Destinataire</label>
+                                        <select id="recipient" class="form-select" required>
+                                            <option value="" disabled selected>Sélectionner un agent...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="message-content" class="form-label">Message</label>
+                                        <textarea id="message-content" class="form-control" rows="3" placeholder="Contenu du message..." required></textarea>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="priority" class="form-label">Priorité</label>
+                                            <select id="priority" class="form-select">
+                                                <option value="LOW">Basse</option>
+                                                <option value="MEDIUM" selected>Moyenne</option>
+                                                <option value="HIGH">Haute</option>
+                                                <option value="URGENT">Urgente</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mt-4">
+                                                <input class="form-check-input" type="checkbox" id="create-task">
+                                                <label class="form-check-label" for="create-task">
+                                                    Créer une tâche
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Envoyer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Logs View -->
+                    <div id="logs-view" class="content-view">
+                        <h2><i class="fas fa-clipboard-list"></i> Logs</h2>
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5>Journal des Logs</h5>
+                                <div class="d-flex">
+                                    <select id="log-level" class="form-select form-select-sm me-2">
+                                        <option value="ALL">Tous les niveaux</option>
+                                        <option value="INFO">Info</option>
+                                        <option value="WARNING">Warning</option>
+                                        <option value="ERROR">Error</option>
+                                    </select>
+                                    <button id="refresh-logs" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-sync-alt"></i> Actualiser
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <pre id="logs-content" class="logs-container">Chargement des logs...</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer mt-4">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p>&copy; 2025 Paradis IA</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p>Version 2.0</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Toast pour les notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="notification-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toast-title">Notification</strong>
+                <small id="toast-time">Maintenant</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-message">
+                Message de notification
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal pour les détails de tâche -->
+    <div class="modal fade" id="task-details-modal" tabindex="-1" aria-labelledby="task-details-title" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="task-details-title">Détails de la tâche</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="task-details-content">
+                    <div class="placeholder">Chargement des détails...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" id="update-task-status">Mettre à jour le statut</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html> 
