@@ -1,0 +1,65 @@
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-copyright">
+                &copy; 2025 Paradis IA V3 - Édition Haute Performance
+            </div>
+            <div class="footer-info">
+                <span id="app-version">Version 3.0.0</span>
+                <span class="separator">|</span>
+                <span id="server-status">Serveur: <span class="server-status-value">Connecté</span></span>
+                <span class="separator">|</span>
+                <span id="last-update">Dernière mise à jour: <time id="last-update-time">Chargement...</time></span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Modals -->
+<div class="modal" id="task-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nouvelle tâche</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="task-form">
+                    <div class="form-group">
+                        <label for="task-description">Description</label>
+                        <textarea id="task-description" class="form-control" rows="3" required placeholder="Décrivez la tâche à accomplir..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="task-agent">Agent assigné</label>
+                            <select id="task-agent" class="form-control" required>
+                                <option value="" disabled selected>Sélectionner un agent</option>
+                                <!-- Options générées dynamiquement -->
+                            </select>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="task-priority">Priorité</label>
+                            <select id="task-priority" class="form-control">
+                                <option value="LOW">Basse</option>
+                                <option value="MEDIUM" selected>Moyenne</option>
+                                <option value="HIGH">Haute</option>
+                                <option value="URGENT">Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-deadline">Date limite (optionnel)</label>
+                        <input type="datetime-local" id="task-deadline" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-cancel-btn">Annuler</button>
+                <button class="btn btn-primary" id="modal-create-btn">Créer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="toast-container" id="toast-container"></div> 

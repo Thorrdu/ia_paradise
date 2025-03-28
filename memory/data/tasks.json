@@ -73,5 +73,55 @@
         "read": false
       }
     ]
+  },
+  {
+    "task_id": "task-86ae9",
+    "description": "test",
+    "assigned_to": "TestAgent1",
+    "created_by": "WebInterface",
+    "priority": "MEDIUM",
+    "status": "PENDING",
+    "created_at": "2025-03-27T23:34:12.390511",
+    "deadline": null,
+    "metadata": {},
+    "messages": [
+      {
+        "message_id": "e510f3ea-18f2-4cf7-91c4-0f6472c2c346",
+        "sender": "WebInterface",
+        "recipient": "TestAgent1",
+        "content": "Nouvelle tâche assignée: test",
+        "priority": "MEDIUM",
+        "metadata": {
+          "task_id": "task-86ae9"
+        },
+        "timestamp": "2025-03-27T23:34:12.390511",
+        "read": false
+      }
+    ]
+  },
+  {
+    "task_id": "task-d1d9d",
+    "description": "test",
+    "assigned_to": "TestAgent1",
+    "created_by": "WebInterface",
+    "priority": "MEDIUM",
+    "status": "PENDING",
+    "created_at": "2025-03-27T23:35:17.449965",
+    "deadline": null,
+    "metadata": {},
+    "messages": [
+      {
+        "message_id": "447de807-d83d-477d-8a6b-d645abab29a5",
+        "sender": "WebInterface",
+        "recipient": "TestAgent1",
+        "content": "Nouvelle tâche assignée: test",
+        "priority": "MEDIUM",
+        "metadata": {
+          "task_id": "task-d1d9d"
+        },
+        "timestamp": "2025-03-27T23:35:17.449965",
+        "read": false
+      }
+    ]
   }
 ]

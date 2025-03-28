@@ -1,79 +1,61 @@
+"""
+Module principal pour la génération du rapport de performance
+"""
+
+import subprocess
 import os
-import logging
-import time
-from pathlib import Path
+from datetime import datetime
 
-from .communication_inter_ia import CommunicationManager, MessagePriority
-from .monitoring_agent import MonitoringAgent
-from .dev_php_agent import PHPDevAgent
-from .system_agent import SystemAgent
-
-# Configuration des logs
-def setup_logging():
-    """Configure le système de logs."""
-    logs_dir = Path("logs")
-    logs_dir.mkdir(exist_ok=True)
-    
-    log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    logging.basicConfig(
-        level=logging.INFO,
-        format=log_format,
-        handlers=[
-            logging.FileHandler(logs_dir / "paradis_ia.log"),
-            logging.StreamHandler()
-        ]
-    )
-    return logging.getLogger("ParadisIA")
-
-def main():
-    """Fonction principale pour lancer le système d'agents."""
-    logger = setup_logging()
-    logger.info("Démarrage du système d'agents Paradis IA V2")
-    
-    # Création du gestionnaire de communication
-    comm_manager = CommunicationManager()
-    logger.info("Gestionnaire de communication initialisé")
-    
-    # Création des agents
-    monitoring_agent = MonitoringAgent("MonitoringAgent", comm_manager)
-    php_agent = PHPDevAgent("PHPDevAgent", comm_manager)
-    system_agent = SystemAgent("SystemAgent", comm_manager)
-    
-    agents = [monitoring_agent, php_agent, system_agent]
-    logger.info(f"Agents créés: {[agent.name for agent in agents]}")
-    
-    # Test de communication inter-agents
-    logger.info("Test de communication inter-agents")
-    message = comm_manager.create_message(
-        sender="SystemInitializer",
-        recipient="MonitoringAgent",
-        content="Démarrer le monitoring initial",
-        priority=MessagePriority.HIGH
-    )
-    comm_manager.send_message(message)
-    
-    # Boucle principale
+def execute_command(command: str) -> str:
+    """Exécute une commande système et retourne le résultat."""
     try:
-        logger.info("Démarrage de la boucle principale")
-        while True:
-            # Traitement des messages pour chaque agent
-            for agent in agents:
-                agent.process_messages()
-            
-            # Pause pour éviter de surcharger le CPU
-            time.sleep(1)
-            
-    except KeyboardInterrupt:
-        logger.info("Arrêt du système demandé par l'utilisateur")
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            encoding='cp850'  # Encodage pour Windows en français
+        )
         
-    finally:
-        # Sauvegarde de l'état du système
-        state_file = "config/system_state.json"
-        os.makedirs(os.path.dirname(state_file), exist_ok=True)
-        comm_manager.save_state(state_file)
-        logger.info(f"État du système sauvegardé dans {state_file}")
-        
-        logger.info("Système arrêté")
+        if result.returncode == 0:
+            return result.stdout
+        else:
+            return f"Erreur lors de l'exécution de la commande : {result.stderr}"
+            
+    except Exception as e:
+        return f"Erreur : {str(e)}"
+
+def generate_performance_report() -> None:
+    """Génère un rapport complet de performance système."""
+    
+    # Commandes pour collecter les informations système
+    commands = {
+        "Informations système": "systeminfo",
+        "CPU": "wmic cpu get name,numberofcores,numberoflogicalprocessors",
+        "Mémoire RAM": "wmic memorychip get capacity,speed",
+        "GPU": "wmic path win32_VideoController get name,adapterram",
+        "Disques": "wmic diskdrive get size,freespace",
+        "Processus": "wmic process get caption,processid,workingsetsize /format:value",
+        "Ports réseau": "netstat -ano | findstr LISTENING"
+    }
+    
+    # Création du rapport
+    report = []
+    report.append("=== Rapport de Performance Système ===")
+    report.append(f"Date : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    
+    # Exécution des commandes et collecte des résultats
+    for title, command in commands.items():
+        report.append(f"=== {title} ===")
+        result = execute_command(command)
+        report.append(result)
+        report.append("\n")
+    
+    # Sauvegarde du rapport
+    with open("rapport_performance.txt", "w", encoding="utf-8") as f:
+        f.write("\n".join(report))
+    
+    print("Rapport de performance généré avec succès dans 'rapport_performance.txt'")
 
 if __name__ == "__main__":
-    main() 
+    generate_performance_report() 

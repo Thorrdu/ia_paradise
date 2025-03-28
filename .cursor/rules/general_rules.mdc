@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+📑 Règles Générales :
+
+    1️⃣ Toujours exécuter les installations dans un environnement isolé (venv)
+
+    2️⃣ Vérifier systématiquement chaque installation avec une commande de test
+
+    3️⃣ Arrêter l’installation en cas d’erreur et proposer un correctif
+
+    4️⃣ Utiliser CUDA et cuDNN si disponibles
+
+    5️⃣ Prioriser les versions stables des bibliothèques
+
+    6️⃣ Automatiser les tests pour valider chaque étape
+
+    7️⃣ Stocker les logs des installations dans un fichier dédié (install_logs.txt)
+
+      
+  Available models
+- **Mixtral 8x7B** : Modèle de langage multilingue puissant.
+- **Dolphin Mixtral** : Modèle optimisé pour les instructions.
+- **CodeLlama 34B** : Modèle de code haute qualité.
+- **DeepSeek Coder** : Modèle spécialisé pour le développement.

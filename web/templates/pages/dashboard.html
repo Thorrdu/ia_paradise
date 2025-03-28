@@ -1,0 +1,295 @@
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1 class="page-title">Tableau de bord</h1>
+        <div class="page-actions">
+            <div class="date-filter">
+                <select id="time-range" class="form-control">
+                    <option value="today">Aujourd'hui</option>
+                    <option value="week" selected>Cette semaine</option>
+                    <option value="month">Ce mois</option>
+                    <option value="custom">Personnalisé</option>
+                </select>
+            </div>
+            <button class="btn btn-outline" id="export-btn">
+                <i class="fas fa-file-export"></i> Exporter
+            </button>
+        </div>
+    </div>
+
+    <!-- Métriques principales -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-icon active">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value" id="active-agents-count">0</h3>
+                <p class="metric-label">Agents actifs</p>
+                <span class="metric-trend up">
+                    <i class="fas fa-arrow-up"></i> <span id="agents-trend">0%</span>
+                </span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon pending">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value" id="pending-tasks-count">0</h3>
+                <p class="metric-label">Tâches en attente</p>
+                <span class="metric-trend down">
+                    <i class="fas fa-arrow-down"></i> <span id="tasks-trend">0%</span>
+                </span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon completed">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value" id="completed-tasks-count">0</h3>
+                <p class="metric-label">Tâches terminées</p>
+                <span class="metric-trend up">
+                    <i class="fas fa-arrow-up"></i> <span id="completed-trend">0%</span>
+                </span>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon system">
+                <i class="fas fa-microchip"></i>
+            </div>
+            <div class="metric-content">
+                <h3 class="metric-value" id="system-load">0%</h3>
+                <p class="metric-label">Charge système</p>
+                <span class="metric-trend neutral">
+                    <i class="fas fa-minus"></i> <span id="load-trend">0%</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille dashboard -->
+    <div class="dashboard-grid">
+        <!-- Activité des agents -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Activité des agents</h2>
+                <div class="card-actions">
+                    <button class="btn btn-icon" title="Rafraîchir">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn btn-icon" title="Options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="agents-activity" id="agents-activity">
+                    <div class="loading-indicator">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <span>Chargement des agents...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/agents" class="btn btn-text">Voir tous les agents <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <!-- Tâches en cours -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Tâches en cours</h2>
+                <div class="card-actions">
+                    <button class="btn btn-icon" title="Rafraîchir">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn btn-icon" title="Options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="tasks-container" id="current-tasks">
+                    <div class="loading-indicator">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <span>Chargement des tâches...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/tasks" class="btn btn-text">Voir toutes les tâches <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <!-- Utilisation du système -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Performances système</h2>
+                <div class="card-actions">
+                    <select id="perf-time-range" class="form-control form-control-sm">
+                        <option value="realtime">Temps réel</option>
+                        <option value="1h">1 heure</option>
+                        <option value="24h">24 heures</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="performance-grid">
+                    <div class="performance-stat">
+                        <div class="stat-header">
+                            <span class="stat-label">CPU</span>
+                            <span class="stat-value" id="cpu-value">0%</span>
+                        </div>
+                        <div class="stat-chart-container">
+                            <canvas id="cpu-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="performance-stat">
+                        <div class="stat-header">
+                            <span class="stat-label">RAM</span>
+                            <span class="stat-value" id="ram-value">0%</span>
+                        </div>
+                        <div class="stat-chart-container">
+                            <canvas id="ram-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="performance-stat">
+                        <div class="stat-header">
+                            <span class="stat-label">GPU</span>
+                            <span class="stat-value" id="gpu-value">0%</span>
+                        </div>
+                        <div class="stat-chart-container">
+                            <canvas id="gpu-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="performance-stat">
+                        <div class="stat-header">
+                            <span class="stat-label">Disque</span>
+                            <span class="stat-value" id="disk-value">0%</span>
+                        </div>
+                        <div class="stat-chart-container">
+                            <canvas id="disk-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/monitoring" class="btn btn-text">Monitoring détaillé <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <!-- Communication récente -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Communications récentes</h2>
+                <div class="card-actions">
+                    <button class="btn btn-icon" title="Rafraîchir">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn btn-icon" title="Options">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="messages-container" id="recent-messages">
+                    <div class="loading-indicator">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <span>Chargement des messages...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="quick-message">
+                    <select id="quick-message-agent" class="form-control">
+                        <option value="" disabled selected>Sélectionner un destinataire</option>
+                    </select>
+                    <input type="text" id="quick-message-input" class="form-control" placeholder="Message rapide...">
+                    <button class="btn btn-primary" id="quick-message-send">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs système récents -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">Logs système</h2>
+                <div class="card-actions">
+                    <select id="log-level" class="form-control form-control-sm">
+                        <option value="all">Tous</option>
+                        <option value="error">Erreurs</option>
+                        <option value="warning">Avertissements</option>
+                        <option value="info">Info</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="logs-container" id="system-logs">
+                    <div class="loading-indicator">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <span>Chargement des logs...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/logs" class="btn btn-text">Voir tous les logs <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+
+        <!-- État temps réel -->
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h2 class="card-title">État en temps réel</h2>
+                <div class="card-actions">
+                    <span class="status-pill" id="realtime-status">En ligne</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="realtime-metrics">
+                    <div class="rt-metric">
+                        <div class="rt-metric-icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="rt-metric-info">
+                            <span class="rt-metric-label">Temps de réponse moyen</span>
+                            <span class="rt-metric-value" id="avg-response-time">0 ms</span>
+                        </div>
+                    </div>
+                    <div class="rt-metric">
+                        <div class="rt-metric-icon">
+                            <i class="fas fa-memory"></i>
+                        </div>
+                        <div class="rt-metric-info">
+                            <span class="rt-metric-label">Utilisation VRAM</span>
+                            <span class="rt-metric-value" id="vram-usage">0 GB</span>
+                        </div>
+                    </div>
+                    <div class="rt-metric">
+                        <div class="rt-metric-icon">
+                            <i class="fas fa-network-wired"></i>
+                        </div>
+                        <div class="rt-metric-info">
+                            <span class="rt-metric-label">Trafic réseau</span>
+                            <span class="rt-metric-value" id="network-traffic">0 KB/s</span>
+                        </div>
+                    </div>
+                    <div class="rt-metric">
+                        <div class="rt-metric-icon">
+                            <i class="fas fa-temperature-high"></i>
+                        </div>
+                        <div class="rt-metric-info">
+                            <span class="rt-metric-label">Température GPU</span>
+                            <span class="rt-metric-value" id="gpu-temp">0°C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="#" class="btn btn-text" id="health-check-btn">Exécuter un contrôle santé <i class="fas fa-heartbeat"></i></a>
+            </div>
+        </div>
+    </div>
+</div> 

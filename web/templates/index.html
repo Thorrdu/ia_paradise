@@ -3,134 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paradis IA - Édition Haute Performance</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <title>Paradis IA - Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="app-container">
-        <header>
-            <div class="logo-container">
-                <img src="/static/logo.png" alt="Logo Paradis IA" class="logo">
-                <h1>Paradis IA</h1>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">Paradis IA - Interface</h1>
+        
+        <!-- Section Agents -->
+        <div class="bg-white shadow-md rounded p-4 mb-4">
+            <h2 class="text-2xl font-semibold mb-2">Agents</h2>
+            <div id="agents-list">
+                <!-- Liste des agents sera injectée ici -->
             </div>
-            <div class="system-status">
-                <span id="status-indicator" class="status-indicator"></span>
-                <span id="status-text">Chargement...</span>
+        </div>
+
+        <!-- Section Chat -->
+        <div class="bg-white shadow-md rounded p-4 mb-4">
+            <h2 class="text-2xl font-semibold mb-2">Chat</h2>
+            <div id="chat-box">
+                <!-- Messages du chat seront injectés ici -->
             </div>
-        </header>
+        </div>
 
-        <main>
-            <div class="dashboard">
-                <section class="monitoring-section">
-                    <h2>Monitoring Système</h2>
-                    <div class="resource-monitors">
-                        <div class="monitor">
-                            <h3>CPU</h3>
-                            <div class="progress-container">
-                                <div id="cpu-usage" class="progress-bar"></div>
-                                <span id="cpu-text">0%</span>
-                            </div>
-                        </div>
-                        <div class="monitor">
-                            <h3>RAM</h3>
-                            <div class="progress-container">
-                                <div id="ram-usage" class="progress-bar"></div>
-                                <span id="ram-text">0%</span>
-                            </div>
-                        </div>
-                        <div class="monitor">
-                            <h3>GPU</h3>
-                            <div class="progress-container">
-                                <div id="gpu-usage" class="progress-bar"></div>
-                                <span id="gpu-text">N/A</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="agents-section">
-                    <h2>Agents IA</h2>
-                    <div id="agents-list" class="agents-list">
-                        <!-- Les agents seront chargés dynamiquement ici -->
-                        <div class="loading">Chargement des agents...</div>
-                    </div>
-                </section>
-
-                <section class="tasks-section">
-                    <h2>Tâches</h2>
-                    <div class="task-controls">
-                        <button id="new-task-btn" class="primary-btn">Nouvelle Tâche</button>
-                        <select id="task-filter">
-                            <option value="all">Toutes les tâches</option>
-                            <option value="pending">En attente</option>
-                            <option value="in_progress">En cours</option>
-                            <option value="completed">Terminées</option>
-                        </select>
-                    </div>
-                    <div id="tasks-list" class="tasks-list">
-                        <!-- Les tâches seront chargées dynamiquement ici -->
-                        <div class="loading">Chargement des tâches...</div>
-                    </div>
-                </section>
+        <!-- Section Tâches -->
+        <div class="bg-white shadow-md rounded p-4">
+            <h2 class="text-2xl font-semibold mb-2">Tâches</h2>
+            <div id="tasks-list">
+                <!-- Liste des tâches sera injectée ici -->
             </div>
-
-            <div class="interaction-panel">
-                <section class="communication-section">
-                    <h2>Communication</h2>
-                    <div id="messages-container" class="messages-container">
-                        <!-- Les messages seront chargés dynamiquement ici -->
-                        <div class="welcome-message">
-                            <p>Bienvenue dans l'interface de Paradis IA. Vous pouvez communiquer avec les agents en envoyant des messages ci-dessous.</p>
-                        </div>
-                    </div>
-                    <div class="message-input">
-                        <select id="agent-select">
-                            <option value="">Sélectionner un agent</option>
-                            <!-- Les agents seront chargés dynamiquement ici -->
-                        </select>
-                        <textarea id="message-text" placeholder="Entrez votre message ici..."></textarea>
-                        <button id="send-message-btn" class="primary-btn">Envoyer</button>
-                    </div>
-                </section>
-            </div>
-        </main>
-
-        <footer>
-            <p>Paradis IA V2 - Édition Haute Performance | <span id="mode-indicator">Mode: Chargement...</span></p>
-        </footer>
-    </div>
-
-    <!-- Modals -->
-    <div id="new-task-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Nouvelle Tâche</h2>
-            <form id="new-task-form">
-                <div class="form-group">
-                    <label for="task-description">Description</label>
-                    <textarea id="task-description" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="task-agent">Agent assigné</label>
-                    <select id="task-agent" required>
-                        <!-- Les agents seront chargés dynamiquement ici -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="task-priority">Priorité</label>
-                    <select id="task-priority">
-                        <option value="LOW">Basse</option>
-                        <option value="MEDIUM" selected>Moyenne</option>
-                        <option value="HIGH">Haute</option>
-                        <option value="URGENT">Urgente</option>
-                    </select>
-                </div>
-                <button type="submit" class="primary-btn">Créer la tâche</button>
-            </form>
+            <button class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Ajouter une tâche</button>
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Récupérer et afficher les agents
+        fetch('/api/agents')
+            .then(response => response.json())
+            .then(data => {
+                const agentsList = document.getElementById('agents-list');
+                agentsList.innerHTML = data.map(agent => `
+                    <div class="agent">
+                        <h3>${agent.name}</h3>
+                        <p>Status: ${agent.status}</p>
+                        <p>Capabilities: ${agent.capabilities.join(', ')}</p>
+                    </div>
+                `).join('');
+            });
+
+        // Récupérer et afficher les messages de chat
+        fetch('/api/messages')
+            .then(response => response.json())
+            .then(data => {
+                const chatBox = document.getElementById('chat-box');
+                chatBox.innerHTML = data.map(message => `
+                    <div class="message">
+                        <strong>${message.sender}:</strong> ${message.content}
+                    </div>
+                `).join('');
+            });
+
+        // Récupérer et afficher les tâches
+        fetch('/api/tasks')
+            .then(response => response.json())
+            .then(data => {
+                const tasksList = document.getElementById('tasks-list');
+                tasksList.innerHTML = data.map(task => `
+                    <div class="task">
+                        <h3>${task.description}</h3>
+                        <p>Assigned to: ${task.assigned_to}</p>
+                        <p>Status: ${task.status}</p>
+                    </div>
+                `).join('');
+            });
+
+        // Ajouter une nouvelle tâche
+        document.querySelector('button').addEventListener('click', function() {
+            const description = prompt('Entrez la description de la tâche:');
+            const assignedTo = prompt('Assignez la tâche à un agent:');
+            const priority = prompt('Définissez la priorité (LOW, MEDIUM, HIGH, URGENT):', 'MEDIUM');
+
+            fetch('/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    description: description,
+                    assigned_to: assignedTo,
+                    priority: priority
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Tâche ajoutée avec succès!');
+                    location.reload(); // Recharger la page pour mettre à jour la liste des tâches
+                } else {
+                    alert('Erreur lors de l\'ajout de la tâche: ' + data.error);
+                }
+            });
+        });
+    });
+    </script>
 </body>
 </html> 

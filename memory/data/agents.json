@@ -48,7 +48,7 @@
       "provider": "ollama"
     },
     "created_at": "2025-03-27T22:48:21.429269",
-    "last_seen": "2025-03-27T23:07:32.704390"
+    "last_seen": "2025-03-27T23:26:21.796301"
   },
   "WebInterface": {
     "name": "WebInterface",
@@ -58,7 +58,7 @@
     ],
     "metadata": {},
     "created_at": "2025-03-27T23:09:55.084165",
-    "last_seen": "2025-03-27T23:15:36.992931"
+    "last_seen": "2025-03-28T00:25:00.981088"
   },
   "SystemAgent": {
     "name": "SystemAgent",
@@ -68,6 +68,19 @@
     ],
     "metadata": {},
     "created_at": "2025-03-27T23:09:55.085164",
-    "last_seen": "2025-03-27T23:15:09.211333"
+    "last_seen": "2025-03-28T00:25:00.982088"
+  },
+  "BaseAgent": {
+    "name": "BaseAgent",
+    "capabilities": [
+      "communication",
+      "basic_reasoning"
+    ],
+    "metadata": {
+      "model": "mixtral",
+      "provider": "ollama"
+    },
+    "created_at": "2025-03-27T23:26:21.777302",
+    "last_seen": "2025-03-27T23:26:21.777302"
   }
 }

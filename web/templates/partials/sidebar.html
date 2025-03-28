@@ -1,0 +1,79 @@
+<aside class="sidebar">
+    <nav class="sidebar-nav">
+        <ul>
+            <li class="nav-item active">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/agents" class="nav-link">
+                    <i class="fas fa-robot"></i>
+                    <span>Agents IA</span>
+                    <span class="nav-badge" id="agents-count">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/tasks" class="nav-link">
+                    <i class="fas fa-tasks"></i>
+                    <span>Tâches</span>
+                    <span class="nav-badge" id="tasks-count">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/communication" class="nav-link">
+                    <i class="fas fa-comments"></i>
+                    <span>Communication</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/monitoring" class="nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Monitoring</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/logs" class="nav-link">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Logs</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    
+    <div class="sidebar-footer">
+        <div class="system-resources">
+            <div class="resource">
+                <span class="resource-label">CPU</span>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="sidebar-cpu-bar" style="width: 0%"></div>
+                </div>
+                <span class="resource-value" id="sidebar-cpu-value">0%</span>
+            </div>
+            <div class="resource">
+                <span class="resource-label">RAM</span>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="sidebar-ram-bar" style="width: 0%"></div>
+                </div>
+                <span class="resource-value" id="sidebar-ram-value">0%</span>
+            </div>
+            <div class="resource">
+                <span class="resource-label">GPU</span>
+                <div class="resource-bar">
+                    <div class="resource-fill" id="sidebar-gpu-bar" style="width: 0%"></div>
+                </div>
+                <span class="resource-value" id="sidebar-gpu-value">0%</span>
+            </div>
+        </div>
+        
+        <div class="sidebar-actions">
+            <button class="btn btn-sm" id="toggle-sidebar">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="btn btn-sm btn-primary" id="quick-task-btn">
+                <i class="fas fa-plus"></i> Nouvelle tâche
+            </button>
+        </div>
+    </div>
+</aside> 

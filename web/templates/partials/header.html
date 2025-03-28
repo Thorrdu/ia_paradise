@@ -1,0 +1,49 @@
+<header class="main-header">
+    <div class="container">
+        <div class="header-logo">
+            <img src="/static/img/logo.png" alt="Paradis IA Logo">
+            <span class="logo-text">Paradis IA <span class="version">V3</span></span>
+        </div>
+        <div class="header-right">
+            <div class="system-status">
+                <span class="status-indicator" id="system-status-indicator"></span>
+                <span id="system-mode">Mode: ...</span>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-icon" id="notifications-btn" title="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notifications-counter">0</span>
+                </button>
+                <button class="btn btn-icon" id="refresh-btn" title="Rafraîchir">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="user-menu-btn">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item">Préférences</a>
+                        <a href="#" class="dropdown-item">Aide</a>
+                        <div class="dropdown-divider"></div>
+                        <div class="theme-toggle">
+                            <span>Thème sombre</span>
+                            <label class="switch">
+                                <input type="checkbox" id="dark-mode-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<div id="notifications-panel" class="notifications-panel">
+    <div class="notifications-header">
+        <h3>Notifications</h3>
+        <button class="btn btn-text" id="clear-notifications">Tout effacer</button>
+    </div>
+    <div class="notifications-list" id="notifications-list">
+        <!-- Notifications générées dynamiquement -->
+    </div>
+</div> 

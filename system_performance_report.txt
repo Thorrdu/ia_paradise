@@ -1,0 +1,5 @@
+Here is the analysis and optimization report for the system's performance:
+
+<ANALYSIS RESULTS>
+
+Based on the data, here are our recommendations to optimize the system.

@@ -1,0 +1,126 @@
+{
+  "documents": [
+    "Les erreurs 'Undefined variable' en PHP se produisent quand on essaie d'utiliser une variable qui n'a pas été déclarée ou initialisée.",
+    "Les erreurs 'Class not found' indiquent généralement un problème avec l'autoloader, un namespace incorrect ou un fichier manquant.",
+    "PHP PSR-12: Les accolades de classe doivent être sur la ligne suivante, et les accolades de méthode et fonction doivent être sur la même ligne que la déclaration.",
+    "Validation des entrées: Toujours filtrer et valider les entrées utilisateur avec filter_var ou des bibliothèques de validation pour éviter les injections.",
+    "Laravel est un framework PHP MVC moderne avec une syntaxe élégante et des fonctionnalités comme Eloquent ORM, Blade, etc.",
+    "Symfony est un framework PHP modulaire et composants réutilisables, souvent utilisé pour des applications d'entreprise.",
+    "Les erreurs 'Undefined variable' en PHP se produisent quand on essaie d'utiliser une variable qui n'a pas été déclarée ou initialisée.",
+    "Les erreurs 'Class not found' indiquent généralement un problème avec l'autoloader, un namespace incorrect ou un fichier manquant.",
+    "PHP PSR-12: Les accolades de classe doivent être sur la ligne suivante, et les accolades de méthode et fonction doivent être sur la même ligne que la déclaration.",
+    "Validation des entrées: Toujours filtrer et valider les entrées utilisateur avec filter_var ou des bibliothèques de validation pour éviter les injections.",
+    "Laravel est un framework PHP MVC moderne avec une syntaxe élégante et des fonctionnalités comme Eloquent ORM, Blade, etc.",
+    "Symfony est un framework PHP modulaire et composants réutilisables, souvent utilisé pour des applications d'entreprise.",
+    "Les erreurs 'Undefined variable' en PHP se produisent quand on essaie d'utiliser une variable qui n'a pas été déclarée ou initialisée.",
+    "Les erreurs 'Class not found' indiquent généralement un problème avec l'autoloader, un namespace incorrect ou un fichier manquant.",
+    "PHP PSR-12: Les accolades de classe doivent être sur la ligne suivante, et les accolades de méthode et fonction doivent être sur la même ligne que la déclaration.",
+    "Validation des entrées: Toujours filtrer et valider les entrées utilisateur avec filter_var ou des bibliothèques de validation pour éviter les injections.",
+    "Laravel est un framework PHP MVC moderne avec une syntaxe élégante et des fonctionnalités comme Eloquent ORM, Blade, etc.",
+    "Symfony est un framework PHP modulaire et composants réutilisables, souvent utilisé pour des applications d'entreprise.",
+    "Les erreurs 'Undefined variable' en PHP se produisent quand on essaie d'utiliser une variable qui n'a pas été déclarée ou initialisée.",
+    "Les erreurs 'Class not found' indiquent généralement un problème avec l'autoloader, un namespace incorrect ou un fichier manquant.",
+    "PHP PSR-12: Les accolades de classe doivent être sur la ligne suivante, et les accolades de méthode et fonction doivent être sur la même ligne que la déclaration.",
+    "Validation des entrées: Toujours filtrer et valider les entrées utilisateur avec filter_var ou des bibliothèques de validation pour éviter les injections.",
+    "Laravel est un framework PHP MVC moderne avec une syntaxe élégante et des fonctionnalités comme Eloquent ORM, Blade, etc.",
+    "Symfony est un framework PHP modulaire et composants réutilisables, souvent utilisé pour des applications d'entreprise."
+  ],
+  "metadata": [
+    {
+      "type": "error_pattern",
+      "category": "undefined_variable"
+    },
+    {
+      "type": "error_pattern",
+      "category": "class_not_found"
+    },
+    {
+      "type": "best_practice",
+      "category": "coding_style"
+    },
+    {
+      "type": "best_practice",
+      "category": "security"
+    },
+    {
+      "type": "framework",
+      "category": "laravel"
+    },
+    {
+      "type": "framework",
+      "category": "symfony"
+    },
+    {
+      "type": "error_pattern",
+      "category": "undefined_variable"
+    },
+    {
+      "type": "error_pattern",
+      "category": "class_not_found"
+    },
+    {
+      "type": "best_practice",
+      "category": "coding_style"
+    },
+    {
+      "type": "best_practice",
+      "category": "security"
+    },
+    {
+      "type": "framework",
+      "category": "laravel"
+    },
+    {
+      "type": "framework",
+      "category": "symfony"
+    },
+    {
+      "type": "error_pattern",
+      "category": "undefined_variable"
+    },
+    {
+      "type": "error_pattern",
+      "category": "class_not_found"
+    },
+    {
+      "type": "best_practice",
+      "category": "coding_style"
+    },
+    {
+      "type": "best_practice",
+      "category": "security"
+    },
+    {
+      "type": "framework",
+      "category": "laravel"
+    },
+    {
+      "type": "framework",
+      "category": "symfony"
+    },
+    {
+      "type": "error_pattern",
+      "category": "undefined_variable"
+    },
+    {
+      "type": "error_pattern",
+      "category": "class_not_found"
+    },
+    {
+      "type": "best_practice",
+      "category": "coding_style"
+    },
+    {
+      "type": "best_practice",
+      "category": "security"
+    },
+    {
+      "type": "framework",
+      "category": "laravel"
+    },
+    {
+      "type": "framework",
+      "category": "symfony"
+    }
+  ]
+}
